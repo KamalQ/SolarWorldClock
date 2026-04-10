@@ -1,15 +1,16 @@
 {
   "package_id": "com.icedgrapefruit.worldclock",
   "edition": "202601",
-  "name": "Even World Clock",
-  "version": "0.1.0",
-  "min_app_version": "0.1.0",
-  "tagline": "World Clock for G2 glasses",
-  "description": "View multiple timezone clocks on your G2 glasses. Add cities, see live times and offsets from your local time.",
+  "name": "Solar World Clock",
+  "version": "0.2.0",
+  "min_app_version": "0.2.0",
+  "min_sdk_version": "0.1.0",
+  "tagline": "Time zones at a glance",
+  "description": "Solar World Clock lets you track time across the globe while staying connected to the sun. See local time, sunrise, solar noon, sunset, day length, and moon phase for any city — all at a glance on your G2 glasses. Perfect for international meetings, travel planning, astronomy enthusiasts, and anyone who lives by the light.",
   "author": "IcedGrapeFruit",
   "entrypoint": "index.html",
-  "permissions": {
-    "network": [],
-    "fs": []
-  }
+  "supported_languages": ["en"],
+  "permissions": [
+    { "name": "network", "desc": "Used to sync time data across timezones." }
+  ]
 }

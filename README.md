@@ -1,8 +1,8 @@
-# Even World Clock
+# Solar World Clock
 
-A world clock app for the **Even Realities G2 smart glasses**, built with React and Vite.
+A solar-aware world clock app for the **Even Realities G2 smart glasses**, built with React and Vite.
 
-Track multiple city times simultaneously — shown live on your glasses with a two-panel HUD layout.
+Track multiple city times simultaneously — shown live on your glasses with a two-panel HUD layout. Toggle between a city list and solar data (sunrise, solar noon, sunset, day length, moon phase) for your featured city.
 
 ## Features
 
@@ -10,8 +10,10 @@ Track multiple city times simultaneously — shown live on your glasses with a t
 - Reorder cities — the top city gets a **featured panel** on the glasses with full detail
 - Live time display on the G2 HUD, updated every second
 - Timezone abbreviation and UTC offset relative to your local time
-- Sunrise and sunset times for each city (toggleable detail view)
-- City list persists across sessions via SDK localStorage
+- **Solar mode**: sunrise, solar noon, sunset, day length, and moon phase for the featured city
+- **Cities mode**: list of up to 8 cities with optional sunrise/sunset detail rows
+- Double-tap on glasses to toggle between Solar and Cities right panel
+- City list and panel mode persist across sessions via SDK localStorage
 
 ## Glasses HUD Layout
 
@@ -19,12 +21,12 @@ The display uses three text containers across the 576×288px canvas:
 
 ```
 ┌─────────────────────────────────────────────────┐
-│              EVEN WORLD CLOCK (header)           │
+│              SOLAR WORLD CLOCK (header)          │
 ├────────────────┬────────────────────────────────-┤
-│  Featured city │  City list (up to 8 cities)     │
-│  Full time     │  Name  Time  TZ  Offset         │
-│  TZ + offset   │  ...                            │
-│  Sunrise/set   │                                 │
+│  Featured city │  Solar data  OR  City list      │
+│  Full time     │  Sunrise / Solar Noon / Sunset  │
+│  TZ + offset   │  Day Length / Moon Phase        │
+│  Lat / Lng     │                                 │
 └────────────────┴─────────────────────────────────┘
 ```
 

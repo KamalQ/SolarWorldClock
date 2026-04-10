@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { EvenBetterSdk } from '@jappyjan/even-better-sdk';
+import { waitForEvenAppBridge } from '@evenrealities/even_hub_sdk';
 import SunCalc from 'suncalc';
 import CITY_COORDS from '../data/cityCoords';
 
@@ -17,9 +17,6 @@ function getTimeInZone(timezone) {
 
 function getOffsetFromLocal(timezone) {
   const now = new Date();
-  // Get local offset in minutes
-  const localOffset = now.getTimezoneOffset();
-  // Get target offset by comparing formatted dates
   const localParts = new Intl.DateTimeFormat('en-US', {
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -41,10 +38,6 @@ function getOffsetFromLocal(timezone) {
 
   let diffH = targetH - localH + (targetDay - localDay) * 24;
   let diffM = targetM - localM;
-  // Normalize
-  if (diffM !== 0 && Math.abs(diffM) < 60) {
-    // keep as is for half-hour offsets
-  }
   if (diffH > 12) diffH -= 24;
   if (diffH < -12) diffH += 24;
 
@@ -62,10 +55,27 @@ function getAbbreviation(timezone) {
   return parts.find((p) => p.type === 'timeZoneName')?.value || '';
 }
 
+function getMoonPhaseLabel(phase) {
+  if (phase < 0.02 || phase >= 0.98) return 'New Moon';
+  if (phase < 0.23) return 'Waxing Crescent';
+  if (phase < 0.27) return 'First Quarter';
+  if (phase < 0.48) return 'Waxing Gibbous';
+  if (phase < 0.52) return 'Full Moon';
+  if (phase < 0.73) return 'Waning Gibbous';
+  if (phase < 0.77) return 'Last Quarter';
+  return 'Waning Crescent';
+}
+
 function getSunTimes(cityName, timezone) {
   const coords = CITY_COORDS[cityName];
-  if (!coords) return { sunrise: null, sunset: null };
-  const times = SunCalc.getTimes(new Date(), coords.lat, coords.lng);
+  const now = new Date();
+  const moon = SunCalc.getMoonIllumination(now);
+  const moonPhase = getMoonPhaseLabel(moon.phase);
+  const moonIllumination = Math.round(moon.fraction * 100);
+
+  if (!coords) return { sunrise: null, sunset: null, solarNoon: null, dayLength: null, moonPhase, moonIllumination };
+
+  const times = SunCalc.getTimes(now, coords.lat, coords.lng);
   const fmt = (d) => {
     if (!d || isNaN(d)) return null;
     return d.toLocaleTimeString('en-US', {
@@ -75,11 +85,27 @@ function getSunTimes(cityName, timezone) {
       hour12: true,
     });
   };
-  return { sunrise: fmt(times.sunrise), sunset: fmt(times.sunset) };
+
+  let dayLength = null;
+  if (times.sunrise && times.sunset && !isNaN(times.sunrise) && !isNaN(times.sunset)) {
+    const ms = times.sunset - times.sunrise;
+    const totalMins = Math.round(ms / 60000);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    dayLength = m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  return {
+    sunrise: fmt(times.sunrise),
+    sunset: fmt(times.sunset),
+    solarNoon: fmt(times.solarNoon),
+    dayLength,
+    moonPhase,
+    moonIllumination,
+  };
 }
 
 export default function useWorldClock() {
-  // Each city: { city, timezone, country }
   const [cities, setCities] = useState([]);
   const [times, setTimes] = useState({});
   const bridgeReadyRef = useRef(false);
@@ -88,7 +114,7 @@ export default function useWorldClock() {
   useEffect(() => {
     async function load() {
       try {
-        const bridge = await EvenBetterSdk.getRawBridge();
+        const bridge = await waitForEvenAppBridge();
         bridgeReadyRef.current = true;
         const stored = await bridge.getLocalStorage(STORAGE_KEY);
         if (stored) {
@@ -112,10 +138,9 @@ export default function useWorldClock() {
     async function save() {
       const json = JSON.stringify(cities);
       try {
-        const bridge = await EvenBetterSdk.getRawBridge();
+        const bridge = await waitForEvenAppBridge();
         await bridge.setLocalStorage(STORAGE_KEY, json);
       } catch (_) {}
-      // Also save to browser localStorage as fallback
       try { localStorage.setItem(STORAGE_KEY, json); } catch (_) {}
     }
     save();
@@ -166,20 +191,10 @@ export default function useWorldClock() {
       offset: getOffsetFromLocal(cityObj.timezone),
       abbr: getAbbreviation(cityObj.timezone),
     };
-    const { sunrise, sunset } = getSunTimes(cityObj.city, cityObj.timezone);
-    return { ...base, sunrise, sunset };
+    const { sunrise, sunset, solarNoon, dayLength, moonPhase, moonIllumination } = getSunTimes(cityObj.city, cityObj.timezone);
+    const coords = CITY_COORDS[cityObj.city] || null;
+    return { ...base, sunrise, sunset, solarNoon, dayLength, moonPhase, moonIllumination, coords };
   }, [times]);
 
-  // For glasses display: formatted string of all cities
-  const glassesText = useCallback(() => {
-    if (cities.length === 0) return '\n  No cities added\n\n  Add via phone';
-    return cities.slice(0, 5).map((c) => {
-      const info = times[c.timezone + c.city];
-      const time = info ? info.time : getTimeInZone(c.timezone);
-      const offset = info ? info.offset : getOffsetFromLocal(c.timezone);
-      return `${c.city}\n  ${time}  (${offset})`;
-    }).join('\n');
-  }, [cities, times]);
-
-  return { cities, addCity, removeCity, moveCity, getTimeInfo, glassesText };
+  return { cities, addCity, removeCity, moveCity, getTimeInfo };
 }

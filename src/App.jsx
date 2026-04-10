@@ -2,14 +2,13 @@ import { useCallback, useEffect } from 'react';
 import useWorldClock from './hooks/useWorldClock';
 import useGlasses from './hooks/useGlasses';
 import WorldClock from './components/WorldClock';
-import { Card, CardContent, Button, Text } from '@jappyjan/even-realities-ui';
-import { ScreenOffIcon, PanelOnIcon, TimeCountingIcon } from '@jappyjan/even-realities-ui/icons';
+import { Card, Button, ScreenHeader } from 'even-toolkit/web';
+import { IcFeatTimeCounting, IcFeatScreenOff, IcFeatMenu } from 'even-toolkit/web/icons/svg-icons';
 import './App.css';
 
 export default function App() {
   const worldClock = useWorldClock();
 
-  // Get structured city data for glasses
   const getCityData = useCallback(() => {
     return worldClock.cities.map((c) => {
       const info = worldClock.getTimeInfo(c);
@@ -20,6 +19,12 @@ export default function App() {
         abbr: info.abbr,
         sunrise: info.sunrise,
         sunset: info.sunset,
+        solarNoon: info.solarNoon,
+        dayLength: info.dayLength,
+        moonPhase: info.moonPhase,
+        moonIllumination: info.moonIllumination,
+        coords: info.coords,
+        timezone: c.timezone,
       };
     });
   }, [worldClock]);
@@ -37,15 +42,11 @@ export default function App() {
 
   return (
     <div id="app-container">
-      <header style={{ padding: '16px 0 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <TimeCountingIcon size={28} />
-        <div>
-          <Text variant="title-xl" as="h1">Even World Clock</Text>
-          <Text variant="subtitle" as="p" style={{ color: glasses.connected ? '#4BB956' : undefined }}>
-            {glasses.status}
-          </Text>
-        </div>
-      </header>
+      <ScreenHeader
+        title="Solar World Clock"
+        subtitle={glasses.status}
+        actions={<IcFeatTimeCounting width={28} height={28} />}
+      />
 
       <WorldClock
         cities={worldClock.cities}
@@ -55,28 +56,53 @@ export default function App() {
         getTimeInfo={worldClock.getTimeInfo}
       />
 
-      <Card>
-        <CardContent>
-          <Text variant="detail" as="p" style={{ textTransform: 'uppercase', marginBottom: 8 }}>Glasses</Text>
-          <div className="glasses-btns">
+      <Card padding="default">
+        <p style={{ fontSize: 11, fontWeight: 400, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-dim)', marginBottom: 8 }}>
+          Glasses — Right Panel
+        </p>
+        <div className="glasses-btns" style={{ marginBottom: 8 }}>
+          <Button
+            variant={glasses.rightMode === 'cities' ? 'highlight' : 'default'}
+            onClick={() => glasses.setRightMode('cities')}
+          >
+            Cities
+          </Button>
+          <Button
+            variant={glasses.rightMode === 'solar' ? 'highlight' : 'default'}
+            onClick={() => glasses.setRightMode('solar')}
+          >
+            Solar
+          </Button>
+        </div>
+        {glasses.rightMode === 'cities' && (
+          <div className="glasses-btns" style={{ marginBottom: 8 }}>
             <Button
-              variant={glasses.showDetails ? 'accent' : 'default'}
+              variant={glasses.showDetails ? 'secondary' : 'default'}
               onClick={() => glasses.setShowDetails(v => !v)}
               style={{ gridColumn: '1 / -1' }}
             >
-              {glasses.showDetails ? 'Hide Details' : 'Show Details'}
-            </Button>
-            <Button variant="primary" onClick={glasses.showDisplay}>
-              <PanelOnIcon size={16} /> Show Display
-            </Button>
-            <Button variant="negative" onClick={glasses.shutdownGlasses}>
-              <ScreenOffIcon size={16} /> Shutdown
+              {glasses.showDetails ? 'Hide City Details' : 'Show City Details'}
             </Button>
           </div>
-        </CardContent>
+        )}
+        <div className="glasses-btns" style={{ marginBottom: 8 }}>
+          <Button variant="highlight" onClick={glasses.showDisplay}>
+            <IcFeatMenu width={16} height={16} /> Show Display
+          </Button>
+          <Button variant="ghost" onClick={glasses.shutdownGlasses}>
+            <IcFeatScreenOff width={16} height={16} /> Shutdown
+          </Button>
+        </div>
+        <div className="glasses-btns">
+          <Button
+            variant="danger"
+            onClick={glasses.shutdownGlassesPrompt}
+            style={{ gridColumn: '1 / -1' }}
+          >
+            Graceful Shutdown (confirm on glasses)
+          </Button>
+        </div>
       </Card>
-
-
     </div>
   );
 }

@@ -6,90 +6,117 @@ import {
   TextContainerProperty,
   TextContainerUpgrade,
   OsEventTypeList,
+  EventSourceType,
+  LAUNCH_SOURCE_GLASSES_MENU,
 } from '@evenrealities/even_hub_sdk';
+import { buildScrollableList } from 'even-toolkit/glass-display-builders';
+import { renderTextPageLines } from 'even-toolkit/types';
 
 // ─── Header ──────────────────────────────────────────────────────────────────
-// Centered in a 564px container (paddingLength=4 → 556px usable).
-// 40 leading spaces ≈ 200px offset; text center lands near the 288px canvas center.
 function formatHeader() {
-  return '                                        EVEN WORLD CLOCK';
+  return '                                      SOLAR WORLD CLOCK';
 }
 
 // ─── Left panel: featured city with full detail (196px wide) ─────────────────
-// Every line dynamically centered using leading spaces.
 function centerInPanel(text, usableWidth = 184, charPx = 10, spacePx = 5) {
   const textPx = text.length * charPx;
   const spaces = Math.max(0, Math.round((usableWidth - textPx) / 2 / spacePx));
   return ' '.repeat(spaces) + text;
 }
 
-function formatFeatured(city) {
+function formatCoords(coords) {
+  if (!coords) return ['\u2014', '\u2014'];
+  const lat = Math.abs(coords.lat).toFixed(1) + '\u00B0' + (coords.lat >= 0 ? 'N' : 'S');
+  const lng = Math.abs(coords.lng).toFixed(1) + '\u00B0' + (coords.lng >= 0 ? 'E' : 'W');
+  return [lat, lng];
+}
+
+function formatFeatured(city, mode = 'cities') {
   if (!city) return '\n  Add a city\n  in the app\n \n \n ';
   const shortTime = city.time.replace(/:\d{2}\s/, ' ');
-  // "Sunrise"/"Sunset" padded so their time values align with each other
-  const sunriseStr = city.sunrise ? `Sunrise   ${city.sunrise}` : 'Sunrise   \u2014';
-  const sunsetStr  = city.sunset  ? `Sunset    ${city.sunset}`  : 'Sunset    \u2014';
-  // Every line dynamically centered based on its own character width
+
+  let bottomLines;
+  if (mode === 'solar' && city.coords) {
+    const [lat, lng] = formatCoords(city.coords);
+    bottomLines = [
+      centerInPanel(`Lat  ${lat}`, 184, 9, 5),
+      centerInPanel(`Lng  ${lng}`, 184, 9, 5),
+    ];
+  } else {
+    const sunriseStr = city.sunrise ? `Sunrise   ${city.sunrise}` : 'Sunrise   \u2014';
+    const sunsetStr  = city.sunset  ? `Sunset    ${city.sunset}`  : 'Sunset    \u2014';
+    bottomLines = [
+      centerInPanel(sunriseStr, 184, 9, 5),
+      centerInPanel(sunsetStr,  184, 9, 5),
+    ];
+  }
+
   return [
     centerInPanel(city.name),
     ' ',
-    centerInPanel(shortTime),
-    centerInPanel(`${city.abbr}  ${city.offset}`),
+    centerInPanel(`${shortTime}  ${city.abbr}`),
+    city.offset !== 'Same time' ? centerInPanel(city.offset) : ' ',
     ' ',
-    centerInPanel(sunriseStr, 184, 9, 5),
-    centerInPanel(sunsetStr,  184, 9, 5),
+    ...bottomLines,
   ].join('\n');
 }
 
-// ─── Right panel: single-line city list (362px wide) ─────────────────────────
-// Right panel usable ≈ 350px. Proportional font averages ~8-9px/char so
-// MAX_LINE_CHARS=36 is safe (36 × ~9px = 324px well within 350px).
-//
-// Per-city padding: start at ideal alignment (maxNameLen+2), then shrink ONLY
-// for that city if its own tail is too long. Most cities stay fully aligned;
-// only edge cases with very long abbr+offset (e.g. GMT+5:30 +11h 30m) deviate.
-// Names are truncated with ".." only when no other option remains.
-// When showDetails=true a second indented line shows sunrise/sunset.
+// ─── Right panel: Solar mode (362px wide) ────────────────────────────────────
+function formatSolar(city) {
+  if (!city) return '\n  Add a city\n  to see solar data';
+  if (!city.sunrise && !city.solarNoon) {
+    return `\n  ${city.name}\n\n  No solar data\n  for this city`;
+  }
+  const pad = '          ';
+  const row = (label, value) => {
+    const padded = label.padEnd(12);
+    return `${pad}${padded}${value ?? '\u2014'}`;
+  };
+  return [
+    row('Sunrise',    city.sunrise),
+    row('Solar Noon', city.solarNoon),
+    row('Sunset',     city.sunset),
+    ' ',
+    row('Day Length', city.dayLength),
+    ' ',
+    `${pad}${city.moonPhase ?? ''}`,
+    row('Illuminated', city.moonIllumination != null ? `${city.moonIllumination}%` : null),
+  ].join('\n');
+}
+
+// ─── Right panel: city list using buildScrollableList ────────────────────────
+// For showDetails=true, we use a two-line-per-city approach (manual string).
+// For showDetails=false, buildScrollableList handles pagination + scroll indicators.
 const MAX_LINE_CHARS = 36;
 
-function formatList(cities, showDetails = false) {
-  if (cities.length === 0) return '  No other cities\n  Add via phone';
-  // With details (2 lines/city) show 4 cities; without, show up to 8.
-  const subset = cities.slice(0, showDetails ? 4 : 8);
-
+function formatListDetailed(cities) {
+  const subset = cities.slice(0, 4);
   const entries = subset.map(c => {
     const shortTime = c.time.replace(/:\d{2}\s/, ' ');
-    const offset = c.offset === 'Same time' ? 'Same' : c.offset;
+    const offset = c.offset === 'Same time' ? '' : c.offset;
     return { name: c.name, shortTime, abbr: c.abbr, offset, sunrise: c.sunrise, sunset: c.sunset };
   });
 
   const maxNameLen = Math.max(...entries.map(e => e.name.length));
-  const idealPadTo = maxNameLen + 2; // preferred: all name columns the same width
+  const idealPadTo = maxNameLen + 2;
 
   return entries.map(({ name, shortTime, abbr, offset, sunrise, sunset }) => {
-    // Tail = the part after the name column: time + "  " + abbr + "  " + offset
-    const tailLen = shortTime.length + 2 + abbr.length + 2 + offset.length;
-
-    // Shrink padTo for THIS city only until its line fits
+    const tail = offset ? `${shortTime}  ${abbr}  ${offset}` : `${shortTime}  ${abbr}`;
+    const tailLen = tail.length;
     let padTo = idealPadTo;
-    while (padTo > 0 && 1 + padTo + tailLen > MAX_LINE_CHARS) {
-      padTo--;
-    }
+    while (padTo > 0 && 1 + padTo + tailLen > MAX_LINE_CHARS) padTo--;
 
     let displayName;
     if (padTo >= name.length) {
-      displayName = name.padEnd(padTo);           // full name, padded for alignment
+      displayName = name.padEnd(padTo);
     } else if (padTo >= 4) {
-      displayName = name.slice(0, padTo - 2) + '..'; // truncate with ".." (last resort)
+      displayName = name.slice(0, padTo - 2) + '..';
     } else {
       displayName = name.slice(0, Math.max(1, padTo));
     }
 
-    const line = ` ${displayName}${shortTime}  ${abbr}  ${offset}`;
-
-    if (!showDetails || (!sunrise && !sunset)) return line;
-
-    // Second line: sunrise/sunset details
+    const line = ` ${displayName}${tail}`;
+    if (!sunrise && !sunset) return line;
     const detailParts = [];
     if (sunrise) detailParts.push(`\u2191 ${sunrise}`);
     if (sunset)  detailParts.push(`\u2193 ${sunset}`);
@@ -97,15 +124,55 @@ function formatList(cities, showDetails = false) {
   }).join('\n');
 }
 
+function formatList(cities, showDetails = false) {
+  if (cities.length === 0) return '  No other cities\n  Add via phone';
+
+  if (showDetails) {
+    return formatListDetailed(cities);
+  }
+
+  // Use buildScrollableList for automatic scroll indicators
+  const displayLines = buildScrollableList({
+    items: cities,
+    highlightedIndex: -1,  // no cursor highlight
+    maxVisible: 8,
+    formatter: (c) => {
+      const shortTime = c.time.replace(/:\d{2}\s/, ' ');
+      const offset = c.offset === 'Same time' ? '' : c.offset;
+      // Compact single-line format: " CityName  9:45 AM  EST  +2h"
+      const tail = offset ? `${shortTime}  ${c.abbr}  ${offset}` : `${shortTime}  ${c.abbr}`;
+      const maxNameLen = Math.max(...cities.map(x => x.name.length));
+      const padTo = Math.min(maxNameLen + 2, MAX_LINE_CHARS - tail.length - 1);
+      let displayName = c.name.length <= padTo ? c.name.padEnd(padTo) : c.name.slice(0, padTo - 2) + '..';
+      return ` ${displayName}${tail}`;
+    },
+  });
+  return renderTextPageLines(displayLines);
+}
+
+const RIGHTMODE_KEY = 'worldclock_rightmode';
+
 export default function useGlasses({ getCityData }) {
   const [status, setStatus] = useState('Waiting for bridge...');
   const [connected, setConnected] = useState(false);
   const [eventLog, setEventLog] = useState([]);
   const [showDetails, setShowDetails] = useState(false);
+  const [rightMode, setRightMode] = useState('solar'); // 'cities' | 'solar'
 
   const bridgeRef = useRef(null);
   const isStartupCreatedRef = useRef(false);
   const lastContentRef = useRef('');
+  const bridgeReadyRef = useRef(false);
+
+  // Persist rightMode whenever it changes
+  useEffect(() => {
+    if (!bridgeReadyRef.current) return;
+    const bridge = bridgeRef.current;
+    if (bridge) {
+      bridge.setLocalStorage(RIGHTMODE_KEY, rightMode).catch(() => {});
+    }
+    try { localStorage.setItem(RIGHTMODE_KEY, rightMode); } catch (_) {}
+  }, [rightMode]);
 
   const logEvent = useCallback((msg) => {
     const ts = new Date().toLocaleTimeString();
@@ -117,14 +184,14 @@ export default function useGlasses({ getCityData }) {
     });
   }, []);
 
-  const buildConfig = useCallback((cityData, details = false) => {
+  const buildConfig = useCallback((cityData, details = false, mode = 'cities') => {
     const featured = cityData[0] || null;
     const rest = cityData.slice(1);
+    const rightContent = mode === 'solar'
+      ? formatSolar(featured)
+      : formatList(rest, details);
+    const leftContent = formatFeatured(featured, mode);
 
-    // Canvas: 576×288
-    // Header: x=6, y=2,  width=564, height=40  — isEventCapture:1, never scrolls
-    // Left:   x=6, y=44, width=196, height=242  (featured city, 35%, clips)
-    // Right:  x=208,y=44,width=362, height=242  (city list,  65%, clips)
     return {
       containerTotalNum: 3,
       textObject: [
@@ -134,23 +201,23 @@ export default function useGlasses({ getCityData }) {
           containerID: 1, containerName: 'header',
           content: formatHeader(),
           isEventCapture: 1,
-          borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 4,
+          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 4,
         }),
         new TextContainerProperty({
           xPosition: 6,   yPosition: 44,
           width: 196,     height: 242,
           containerID: 2, containerName: 'featured',
-          content: formatFeatured(featured),
+          content: leftContent,
           isEventCapture: 0,
-          borderWidth: 1, borderColor: 8, borderRdaius: 3, paddingLength: 6,
+          borderWidth: 1, borderColor: 8, borderRadius: 3, paddingLength: 6,
         }),
         new TextContainerProperty({
           xPosition: 208, yPosition: 44,
           width: 362,     height: 242,
           containerID: 3, containerName: 'list',
-          content: formatList(rest, details),
+          content: rightContent,
           isEventCapture: 0,
-          borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 6,
+          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 6,
         }),
       ],
     };
@@ -194,21 +261,24 @@ export default function useGlasses({ getCityData }) {
     if (!bridgeRef.current || !isStartupCreatedRef.current) return;
     const cityData = getCityData();
 
-    // Include showDetails in fingerprint so toggling it forces a refresh
-    const fingerprint = cityData.map(c => c.name + c.time + c.sunrise).join(',') + (showDetails ? '|d' : '');
+    const fingerprint = cityData.map(c => c.name + c.time + c.sunrise + (c.solarNoon ?? '') + (c.coords ? c.coords.lat : '')).join(',')
+      + (showDetails ? '|d' : '') + `|${rightMode}`;
     if (fingerprint === lastContentRef.current) return;
     lastContentRef.current = fingerprint;
 
     const featured = cityData[0] || null;
     const rest = cityData.slice(1);
-    // Header is static — only update the two dynamic panels
-    const ok2 = await upgradeContent(formatFeatured(featured), 2, 'featured');
-    const ok3 = await upgradeContent(formatList(rest, showDetails), 3, 'list');
+    const rightContent = rightMode === 'solar'
+      ? formatSolar(featured)
+      : formatList(rest, showDetails);
+
+    const ok2 = await upgradeContent(formatFeatured(featured, rightMode), 2, 'featured');
+    const ok3 = await upgradeContent(rightContent, 3, 'list');
 
     if (!ok2 || !ok3) {
-      await sendPage(buildConfig(cityData, showDetails));
+      await sendPage(buildConfig(cityData, showDetails, rightMode));
     }
-  }, [getCityData, upgradeContent, buildConfig, sendPage, showDetails]);
+  }, [getCityData, upgradeContent, buildConfig, sendPage, showDetails, rightMode]);
 
   const shutdownGlasses = useCallback(async () => {
     try {
@@ -223,14 +293,28 @@ export default function useGlasses({ getCityData }) {
     }
   }, [logEvent]);
 
+  // Graceful shutdown: shows user-confirmation popup on glasses (exitMode: 1)
+  const shutdownGlassesPrompt = useCallback(async () => {
+    try {
+      const bridge = bridgeRef.current;
+      if (!bridge) return;
+      await bridge.shutDownPageContainer(1);
+      isStartupCreatedRef.current = false;
+      setStatus('Shutdown requested');
+      logEvent('Graceful shutdown requested');
+    } catch (err) {
+      console.error('shutdown error:', err);
+    }
+  }, [logEvent]);
+
   const showDisplay = useCallback(async () => {
     if (!bridgeRef.current) return;
     isStartupCreatedRef.current = false;
     lastContentRef.current = '';
-    await sendPage(buildConfig(getCityData(), showDetails));
+    await sendPage(buildConfig(getCityData(), showDetails, rightMode));
     setStatus('Display active');
     logEvent('Display shown');
-  }, [getCityData, buildConfig, sendPage, logEvent, showDetails]);
+  }, [getCityData, buildConfig, sendPage, logEvent, showDetails, rightMode]);
 
   useEffect(() => {
     let disposed = false;
@@ -239,10 +323,24 @@ export default function useGlasses({ getCityData }) {
       try {
         const bridge = await waitForEvenAppBridge();
         bridgeRef.current = bridge;
+        bridgeReadyRef.current = true;
 
         if (disposed) return;
         setStatus('Bridge connected');
         setConnected(true);
+
+        // Restore saved right panel mode
+        try {
+          const saved = await bridge.getLocalStorage(RIGHTMODE_KEY);
+          if (saved === 'cities' || saved === 'solar') {
+            setRightMode(saved);
+          }
+        } catch (_) {
+          try {
+            const saved = localStorage.getItem(RIGHTMODE_KEY);
+            if (saved === 'cities' || saved === 'solar') setRightMode(saved);
+          } catch (_) {}
+        }
 
         const rc = await bridge.createStartUpPageContainer(
           new CreateStartUpPageContainer(buildConfig(getCityData()))
@@ -252,18 +350,35 @@ export default function useGlasses({ getCityData }) {
           logEvent('Initial display created');
         }
 
+        // Auto-initialize display when launched from glasses menu (SDK 0.0.10)
+        bridge.onLaunchSource((source) => {
+          if (disposed) return;
+          if (source === LAUNCH_SOURCE_GLASSES_MENU) {
+            isStartupCreatedRef.current = false;
+            lastContentRef.current = '';
+            sendPage(buildConfig(getCityData()));
+            logEvent('Auto-launch from glasses menu');
+          }
+        });
+
         bridge.onEvenHubEvent((event) => {
           if (disposed) return;
           if (event.textEvent) {
             const et = event.textEvent.eventType;
-            if (et === OsEventTypeList.CLICK_EVENT || et === undefined) {
-              pushContent();
+            if (et === OsEventTypeList.DOUBLE_CLICK_EVENT) {
+              setRightMode((prev) => prev === 'cities' ? 'solar' : 'cities');
             }
           }
           if (event.sysEvent) {
             const et = event.sysEvent.eventType;
-            if (et === OsEventTypeList.CLICK_EVENT || et === undefined) {
-              pushContent();
+            const src = event.sysEvent.eventSource;
+            const srcLabel = src === EventSourceType.TOUCH_EVENT_FROM_RING ? 'ring'
+              : src === EventSourceType.TOUCH_EVENT_FROM_GLASSES_R ? 'glasses-R'
+              : src === EventSourceType.TOUCH_EVENT_FROM_GLASSES_L ? 'glasses-L'
+              : 'unknown';
+            if (et === OsEventTypeList.DOUBLE_CLICK_EVENT) {
+              logEvent(`Double-tap from ${srcLabel} — toggling right panel`);
+              setRightMode((prev) => prev === 'cities' ? 'solar' : 'cities');
             }
           }
         });
@@ -287,5 +402,11 @@ export default function useGlasses({ getCityData }) {
     return () => { disposed = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { status, connected, eventLog, shutdownGlasses, showDisplay, pushContent, showDetails, setShowDetails };
+  return {
+    status, connected, eventLog,
+    shutdownGlasses, shutdownGlassesPrompt,
+    showDisplay, pushContent,
+    showDetails, setShowDetails,
+    rightMode, setRightMode,
+  };
 }

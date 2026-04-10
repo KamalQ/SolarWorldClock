@@ -1,26 +1,9 @@
-:root {
-  --tc-highlight: #FFFFFF;
-  --tc-1st: #232323;
-  --tc-2nd: #7B7B7B;
-  --tc-red: #FF453A;
-  --tc-green: #4BB956;
-  --bc-highlight: #232323;
-  --bc-1st: #FFFFFF;
-  --bc-2nd: #F6F6F6;
-  --bc-3rd: #EEEEEE;
-  --bc-4th: #E4E4E4;
-  --bc-accent: #FEF991;
-  --sc-1st: rgba(0, 0, 0, 0.5);
-  --sc-2nd: rgba(35, 35, 35, 0.08);
-  --radius: 6px;
-  --margin: 12px;
-  --card-padding: 16px;
-}
+/* Design tokens come from even-toolkit/web/theme-light.css */
 
 #app-container {
   max-width: 393px;
   margin: 0 auto;
-  padding: var(--margin);
+  padding: var(--spacing-margin);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -42,7 +25,7 @@
   border: none;
   padding: 6px;
   cursor: pointer;
-  color: var(--tc-2nd);
+  color: var(--color-text-dim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,17 +38,17 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--sc-1st);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
-  padding: var(--card-padding);
+  padding: var(--spacing-card-margin);
 }
 
 .modal-card {
-  background: var(--bc-1st);
-  border-radius: var(--radius);
+  background: var(--color-surface);
+  border-radius: var(--radius-default);
   padding: 20px;
   width: 100%;
   max-width: 360px;
@@ -80,20 +63,6 @@
   align-items: center;
   margin-bottom: 16px;
 }
-
-.search-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: none;
-  border-radius: var(--radius);
-  background: var(--sc-2nd);
-  font-size: 15px;
-  font-weight: 300;
-  letter-spacing: -0.15px;
-  outline: none;
-  box-sizing: border-box;
-}
-.search-input::placeholder { color: var(--tc-2nd); }
 
 .city-list {
   overflow-y: auto;
@@ -113,13 +82,13 @@
   font-weight: 400;
   letter-spacing: -0.15px;
   cursor: pointer;
-  border-bottom: 1px solid var(--bc-2nd);
+  border-bottom: 1px solid var(--color-surface-light);
   text-align: left;
 }
-.city-option:active { background: var(--bc-2nd); }
+.city-option:active { background: var(--color-surface-light); }
 
 .city-country {
-  color: var(--tc-2nd);
+  color: var(--color-text-dim);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.13px;
@@ -134,14 +103,14 @@
 }
 
 .reorder-btn {
-  background: var(--sc-2nd);
+  background: var(--color-accent-alpha);
   border: none;
   width: 28px;
   height: 22px;
   border-radius: 4px;
   font-size: 13px;
   font-weight: 400;
-  color: var(--tc-1st);
+  color: var(--color-text);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -157,46 +126,12 @@
   font-size: 11px;
   font-weight: 400;
   letter-spacing: -0.11px;
-  color: var(--tc-1st);
-  background: var(--bc-accent);
+  color: var(--color-text);
+  background: var(--color-accent-warning);
   padding: 2px 8px;
   border-radius: 4px;
   margin-bottom: 8px;
 }
-
-/* Toggle row */
-.toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Toggle switch */
-.toggle {
-  width: 44px;
-  height: 26px;
-  border-radius: 13px;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.toggle::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--tc-highlight);
-  transition: left 0.2s;
-}
-
-.toggle.on { background: var(--bc-highlight); }
-.toggle.on::after { left: 21px; }
-.toggle.off { background: var(--bc-4th); }
-.toggle.off::after { left: 3px; }
 
 /* Glasses panel */
 .glasses-btns {
@@ -210,8 +145,8 @@
   font-family: monospace;
   font-size: 11px;
   letter-spacing: -0.11px;
-  color: var(--tc-2nd);
-  background: var(--sc-2nd);
+  color: var(--color-text-dim);
+  background: var(--color-accent-alpha);
   border-radius: 4px;
   padding: 8px;
   max-height: 160px;

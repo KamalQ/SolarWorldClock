@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent, Button, Text } from '@jappyjan/even-realities-ui';
-import { AddIcon, TrashIcon, CrossIcon } from '@jappyjan/even-realities-ui/icons';
+import { Card, Button, ListItem, SearchBar } from 'even-toolkit/web';
+import { IcTrash, IcPlus, IcCross } from 'even-toolkit/web/icons/svg-icons';
 import TIMEZONES from '../data/timezones';
 
 export default function WorldClock({ cities, addCity, removeCity, moveCity, getTimeInfo }) {
@@ -19,15 +19,9 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
   return (
     <div className="tab-content">
       {cities.length === 0 && (
-        <Card>
-          <CardContent style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <Text variant="body" as="p" style={{ color: '#7B7B7B' }}>
-              No cities added yet
-            </Text>
-            <Text variant="detail" as="p" style={{ color: '#7B7B7B', marginTop: 4 }}>
-              Tap the button below to add a city
-            </Text>
-          </CardContent>
+        <Card padding="default" style={{ textAlign: 'center', padding: '32px 16px' }}>
+          <p style={{ color: 'var(--color-text-dim)', fontSize: 15 }}>No cities added yet</p>
+          <p style={{ color: 'var(--color-text-dim)', fontSize: 13, marginTop: 4 }}>Tap the button below to add a city</p>
         </Card>
       )}
 
@@ -36,13 +30,22 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
         const isFirst = index === 0;
         const isLast = index === cities.length - 1;
         const isFeatured = index === 0;
+
+        const subtitleParts = [`${info.abbr} · ${info.offset}`];
+        if (isFeatured && info.sunrise) subtitleParts.push(`Sunrise ${info.sunrise} · Sunset ${info.sunset}`);
+        if (isFeatured && info.solarNoon) subtitleParts.push(`Solar Noon ${info.solarNoon} · Day ${info.dayLength}`);
+        if (isFeatured && info.moonPhase) subtitleParts.push(`${info.moonPhase} · ${info.moonIllumination}% illuminated`);
+        if (!isFeatured && info.sunrise) subtitleParts.push(`↑ ${info.sunrise}  ↓ ${info.sunset}`);
+
         return (
-          <Card key={city.city}>
-            <CardContent>
-              {isFeatured && (
-                <span className="featured-badge">Featured on glasses</span>
-              )}
-              <div className="city-row">
+          <div key={city.city}>
+            {isFeatured && (
+              <span className="featured-badge">Featured on glasses</span>
+            )}
+            <ListItem
+              title={city.city}
+              subtitle={subtitleParts.join('\n')}
+              leading={
                 <div className="reorder-btns">
                   <button
                     className="reorder-btn"
@@ -61,59 +64,39 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
                     v
                   </button>
                 </div>
-                <div className="city-info">
-                  <Text variant="title-m" as="p">{city.city}</Text>
-                  <Text variant="detail" as="p" style={{ color: '#7B7B7B' }}>
-                    {info.abbr} · {info.offset}
-                  </Text>
-                  {isFeatured && info.sunrise && (
-                    <Text variant="detail" as="p" style={{ color: '#7B7B7B', marginTop: 2 }}>
-                      Sunrise {info.sunrise} · Sunset {info.sunset}
-                    </Text>
-                  )}
-                  {!isFeatured && info.sunrise && (
-                    <Text variant="detail" as="p" style={{ color: '#7B7B7B', marginTop: 2 }}>
-                      ↑ {info.sunrise}  ↓ {info.sunset}
-                    </Text>
-                  )}
-                </div>
-                <div className="city-time">
-                  <Text variant="title-xl" as="p" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                    {info.time}
-                  </Text>
-                </div>
-                <button className="icon-btn" onClick={() => removeCity(city.city)} aria-label="Remove">
-                  <TrashIcon size={18} />
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+              }
+              trailing={
+                <span style={{ fontVariantNumeric: 'tabular-nums', fontSize: 20, fontWeight: 300 }}>
+                  {info.time}
+                </span>
+              }
+              onDelete={() => removeCity(city.city)}
+            />
+          </div>
         );
       })}
 
       <Button
-        variant="primary"
+        variant="highlight"
         onClick={() => { setShowPicker(true); setSearch(''); }}
         style={{ width: '100%' }}
       >
-        <AddIcon size={16} /> Add City
+        <IcPlus width={16} height={16} /> Add City
       </Button>
 
       {showPicker && (
         <div className="modal-overlay" onClick={() => setShowPicker(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <Text variant="title-m" as="h2">Add City</Text>
+              <h2 style={{ fontSize: 17, fontWeight: 400, margin: 0 }}>Add City</h2>
               <button className="icon-btn" onClick={() => setShowPicker(false)}>
-                <CrossIcon size={20} />
+                <IcCross width={20} height={20} />
               </button>
             </div>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search cities..."
+            <SearchBar
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search cities..."
               autoFocus
             />
             <div className="city-list">
@@ -131,9 +114,9 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
                 </button>
               ))}
               {filtered.length === 0 && (
-                <Text variant="body" as="p" style={{ padding: 16, color: '#7B7B7B', textAlign: 'center' }}>
+                <p style={{ padding: 16, color: 'var(--color-text-dim)', textAlign: 'center', fontSize: 15 }}>
                   No cities found
-                </Text>
+                </p>
               )}
             </div>
           </div>
