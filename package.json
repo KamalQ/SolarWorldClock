@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "qr": "evenhub qr --http --port 5173",
+    "pack": "npm run build && evenhub pack app.json dist -o dist/world-clock.ehpk"
   },
   "dependencies": {
     "@evenrealities/even_hub_sdk": "^0.0.10",
@@ -20,6 +22,7 @@
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
+    "@evenrealities/evenhub-cli": "^0.1.11",
     "@tailwindcss/vite": "^4.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.0",

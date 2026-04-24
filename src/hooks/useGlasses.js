@@ -31,9 +31,25 @@ function formatCoords(coords) {
   return [lat, lng];
 }
 
+function getDateInZone(timezone) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).formatToParts(new Date());
+  const get = (type) => parts.find(p => p.type === type)?.value || '';
+  return `${get('weekday')} ${get('month')} ${get('day')}`;
+}
+
 function formatFeatured(city, mode = 'cities') {
   if (!city) return '\n  Add a city\n  in the app\n \n \n ';
   const shortTime = city.time.replace(/:\d{2}\s/, ' ');
+  // Abbr + optional offset on the same line as time
+  const timeLine = city.offset !== 'Same time'
+    ? `${shortTime}  ${city.abbr}  ${city.offset}`
+    : `${shortTime}  ${city.abbr}`;
+  const dateStr = city.timezone ? getDateInZone(city.timezone) : '';
 
   let bottomLines;
   if (mode === 'solar' && city.coords) {
@@ -51,35 +67,87 @@ function formatFeatured(city, mode = 'cities') {
     ];
   }
 
+  const cp = (text) => centerInPanel(text, 184, 9, 5);
+  const hasOffset = city.offset !== 'Same time';
+  if (hasOffset) {
+    return [
+      cp(city.name),
+      ' ',
+      cp(shortTime),
+      cp(`${city.abbr}  ${city.offset}`),
+      dateStr ? cp(dateStr) : ' ',
+      ' ',
+      ...bottomLines,
+    ].join('\n');
+  }
   return [
-    centerInPanel(city.name),
+    cp(city.name),
     ' ',
-    centerInPanel(`${shortTime}  ${city.abbr}`),
-    city.offset !== 'Same time' ? centerInPanel(city.offset) : ' ',
+    cp(`${shortTime}  ${city.abbr}`),
+    dateStr ? cp(dateStr) : ' ',
     ' ',
     ...bottomLines,
   ].join('\n');
 }
 
+// ─── Right panel: Photography mode (362px wide) ──────────────────────────────
+function formatPhoto(city) {
+  if (!city) return '\n  Add a city\n  to see photo times';
+  const p = '   ';
+
+  // Single line: "★ Golden   5:23 AM → 6:45 AM"
+  const row = (sym, label, from, to) => {
+    if (!from && !to) return null;
+    const range = `${from ?? '\u2014'} \u2192 ${to ?? '\u2014'}`;
+    return `${p}${sym} ${label.padEnd(8)}${range}`;
+  };
+
+  return [
+    '                    PHOTO HOURS',
+    ' ',
+    `${p}Morning`,
+    row('\u25D0', 'Blue', city.blueHourMorningStart, city.blueHourMorningEnd),
+    row('\u2605', 'Golden', city.goldenHourMorningStart, city.goldenHourMorningEnd),
+    `${p}Evening`,
+    row('\u2605', 'Golden', city.goldenHourEveningStart, city.goldenHourEveningEnd),
+    row('\u25D0', 'Blue', city.blueHourEveningStart, city.blueHourEveningEnd),
+  ].filter(l => l !== null).join('\n');
+}
+
 // ─── Right panel: Solar mode (362px wide) ────────────────────────────────────
+function moonSymbol(phase) {
+  if (phase === 'New Moon')        return '\u25CB'; // ○
+  if (phase === 'Waxing Crescent') return '\u25D4'; // ◔
+  if (phase === 'First Quarter')   return '\u25D1'; // ◑
+  if (phase === 'Waxing Gibbous')  return '\u25D5'; // ◕
+  if (phase === 'Full Moon')       return '\u25CF'; // ●
+  if (phase === 'Waning Gibbous')  return '\u25D5'; // ◕
+  if (phase === 'Last Quarter')    return '\u25D0'; // ◐
+  if (phase === 'Waning Crescent') return '\u25D4'; // ◔
+  return '\u25CB';
+}
+
 function formatSolar(city) {
   if (!city) return '\n  Add a city\n  to see solar data';
   if (!city.sunrise && !city.solarNoon) {
     return `\n  ${city.name}\n\n  No solar data\n  for this city`;
   }
-  const pad = '          ';
+  const pad      = '          '; // 10 spaces — no-arrow rows
+  const arrowPad = '       ';    // 7 spaces — arrow rows (7 + arrow + 2 = 10 before label)
   const row = (label, value) => {
     const padded = label.padEnd(12);
     return `${pad}${padded}${value ?? '\u2014'}`;
   };
+  const symbol = moonSymbol(city.moonPhase ?? '');
+  const moonHeader = `${pad}\u2500\u2500\u2500 Moon  ${symbol} \u2500\u2500\u2500`;
   return [
-    row('Sunrise',    city.sunrise),
-    row('Solar Noon', city.solarNoon),
-    row('Sunset',     city.sunset),
+    `${arrowPad}\u2191  ${'Sunrise'.padEnd(12)}${city.sunrise ?? '\u2014'}`,
+    `${arrowPad}\u00B7  ${'Solar Noon'.padEnd(12)}${city.solarNoon ?? '\u2014'}`,
+    `${arrowPad}\u2193  ${'Sunset'.padEnd(12)}${city.sunset ?? '\u2014'}`,
     ' ',
     row('Day Length', city.dayLength),
-    ' ',
-    `${pad}${city.moonPhase ?? ''}`,
+    moonHeader,
+    `${arrowPad}${symbol}  ${city.moonPhase ?? ''}`,
     row('Illuminated', city.moonIllumination != null ? `${city.moonIllumination}%` : null),
   ].join('\n');
 }
@@ -150,6 +218,7 @@ function formatList(cities, showDetails = false) {
   return renderTextPageLines(displayLines);
 }
 
+const PAGES = ['solar', 'cities', 'photo'];
 const RIGHTMODE_KEY = 'worldclock_rightmode';
 
 export default function useGlasses({ getCityData }) {
@@ -163,6 +232,7 @@ export default function useGlasses({ getCityData }) {
   const isStartupCreatedRef = useRef(false);
   const lastContentRef = useRef('');
   const bridgeReadyRef = useRef(false);
+  const lastScrollRef = useRef(0);
 
   // Persist rightMode whenever it changes
   useEffect(() => {
@@ -184,24 +254,26 @@ export default function useGlasses({ getCityData }) {
     });
   }, []);
 
-  const buildConfig = useCallback((cityData, details = false, mode = 'cities') => {
+  const buildConfig = useCallback((cityData, details = false, mode = 'solar') => {
     const featured = cityData[0] || null;
     const rest = cityData.slice(1);
     const rightContent = mode === 'solar'
       ? formatSolar(featured)
-      : formatList(rest, details);
+      : mode === 'photo'
+        ? formatPhoto(featured)
+        : formatList(rest, details);
     const leftContent = formatFeatured(featured, mode);
 
     return {
-      containerTotalNum: 3,
+      containerTotalNum: 4,
       textObject: [
         new TextContainerProperty({
           xPosition: 6,   yPosition: 2,
           width: 564,     height: 40,
           containerID: 1, containerName: 'header',
           content: formatHeader(),
-          isEventCapture: 1,
-          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 4,
+          isEventCapture: 0,
+          borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 4,
         }),
         new TextContainerProperty({
           xPosition: 6,   yPosition: 44,
@@ -209,7 +281,7 @@ export default function useGlasses({ getCityData }) {
           containerID: 2, containerName: 'featured',
           content: leftContent,
           isEventCapture: 0,
-          borderWidth: 1, borderColor: 8, borderRadius: 3, paddingLength: 6,
+          borderWidth: 1, borderColor: 8, borderRdaius: 3, paddingLength: 6,
         }),
         new TextContainerProperty({
           xPosition: 208, yPosition: 44,
@@ -217,7 +289,16 @@ export default function useGlasses({ getCityData }) {
           containerID: 3, containerName: 'list',
           content: rightContent,
           isEventCapture: 0,
-          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 6,
+          borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 6,
+        }),
+        // Invisible event-capture strip in right gutter — no visible content scrolls
+        new TextContainerProperty({
+          xPosition: 571, yPosition: 2,
+          width: 4,       height: 284,
+          containerID: 4, containerName: 'evtcap',
+          content: ' ',
+          isEventCapture: 1,
+          borderWidth: 0, borderColor: 0, borderRdaius: 0, paddingLength: 0,
         }),
       ],
     };
@@ -261,7 +342,7 @@ export default function useGlasses({ getCityData }) {
     if (!bridgeRef.current || !isStartupCreatedRef.current) return;
     const cityData = getCityData();
 
-    const fingerprint = cityData.map(c => c.name + c.time + c.sunrise + (c.solarNoon ?? '') + (c.coords ? c.coords.lat : '')).join(',')
+    const fingerprint = cityData.map(c => c.name + c.time + c.sunrise + (c.solarNoon ?? '') + (c.goldenHourMorningStart ?? '') + (c.coords ? c.coords.lat : '')).join(',')
       + (showDetails ? '|d' : '') + `|${rightMode}`;
     if (fingerprint === lastContentRef.current) return;
     lastContentRef.current = fingerprint;
@@ -270,7 +351,9 @@ export default function useGlasses({ getCityData }) {
     const rest = cityData.slice(1);
     const rightContent = rightMode === 'solar'
       ? formatSolar(featured)
-      : formatList(rest, showDetails);
+      : rightMode === 'photo'
+        ? formatPhoto(featured)
+        : formatList(rest, showDetails);
 
     const ok2 = await upgradeContent(formatFeatured(featured, rightMode), 2, 'featured');
     const ok3 = await upgradeContent(rightContent, 3, 'list');
@@ -332,13 +415,13 @@ export default function useGlasses({ getCityData }) {
         // Restore saved right panel mode
         try {
           const saved = await bridge.getLocalStorage(RIGHTMODE_KEY);
-          if (saved === 'cities' || saved === 'solar') {
+          if (saved === 'cities' || saved === 'solar' || saved === 'photo') {
             setRightMode(saved);
           }
         } catch (_) {
           try {
             const saved = localStorage.getItem(RIGHTMODE_KEY);
-            if (saved === 'cities' || saved === 'solar') setRightMode(saved);
+            if (saved === 'cities' || saved === 'solar' || saved === 'photo') setRightMode(saved);
           } catch (_) {}
         }
 
@@ -361,13 +444,39 @@ export default function useGlasses({ getCityData }) {
           }
         });
 
+        // Shared handlers — scroll cycles pages, double-tap exits with confirmation
+        function handleScroll(et) {
+          if (et !== OsEventTypeList.SCROLL_BOTTOM_EVENT && et !== OsEventTypeList.SCROLL_TOP_EVENT) return;
+          const now = Date.now();
+          if (now - lastScrollRef.current < 400) return;
+          lastScrollRef.current = now;
+          setRightMode((prev) => {
+            const idx = PAGES.indexOf(prev);
+            const next = et === OsEventTypeList.SCROLL_BOTTOM_EVENT
+              ? PAGES[(idx + 1) % PAGES.length]
+              : PAGES[(idx - 1 + PAGES.length) % PAGES.length];
+            logEvent(`Scroll — switched to ${next} view`);
+            return next;
+          });
+        }
+
+        async function handleDoubleTap(srcLabel) {
+          logEvent(`Double-tap from ${srcLabel} — requesting exit`);
+          try {
+            await bridge.shutDownPageContainer(1); // 1 = graceful with confirmation popup
+            isStartupCreatedRef.current = false;
+            setStatus('Shutdown requested');
+          } catch (err) {
+            console.error('shutdown error:', err);
+          }
+        }
+
         bridge.onEvenHubEvent((event) => {
           if (disposed) return;
           if (event.textEvent) {
             const et = event.textEvent.eventType;
-            if (et === OsEventTypeList.DOUBLE_CLICK_EVENT) {
-              setRightMode((prev) => prev === 'cities' ? 'solar' : 'cities');
-            }
+            if (et === OsEventTypeList.DOUBLE_CLICK_EVENT) handleDoubleTap('glasses');
+            else handleScroll(et);
           }
           if (event.sysEvent) {
             const et = event.sysEvent.eventType;
@@ -376,10 +485,8 @@ export default function useGlasses({ getCityData }) {
               : src === EventSourceType.TOUCH_EVENT_FROM_GLASSES_R ? 'glasses-R'
               : src === EventSourceType.TOUCH_EVENT_FROM_GLASSES_L ? 'glasses-L'
               : 'unknown';
-            if (et === OsEventTypeList.DOUBLE_CLICK_EVENT) {
-              logEvent(`Double-tap from ${srcLabel} — toggling right panel`);
-              setRightMode((prev) => prev === 'cities' ? 'solar' : 'cities');
-            }
+            if (et === OsEventTypeList.DOUBLE_CLICK_EVENT) handleDoubleTap(srcLabel);
+            else handleScroll(et);
           }
         });
 

@@ -3,7 +3,7 @@ import useWorldClock from './hooks/useWorldClock';
 import useGlasses from './hooks/useGlasses';
 import WorldClock from './components/WorldClock';
 import { Card, Button, ScreenHeader } from 'even-toolkit/web';
-import { IcFeatTimeCounting, IcFeatScreenOff, IcFeatMenu } from 'even-toolkit/web/icons/svg-icons';
+import { IcFeatScreenOff, IcFeatMenu } from 'even-toolkit/web/icons/svg-icons';
 import './App.css';
 
 export default function App() {
@@ -25,6 +25,14 @@ export default function App() {
         moonIllumination: info.moonIllumination,
         coords: info.coords,
         timezone: c.timezone,
+        goldenHourMorningStart: info.goldenHourMorningStart,
+        goldenHourMorningEnd: info.goldenHourMorningEnd,
+        goldenHourEveningStart: info.goldenHourEveningStart,
+        goldenHourEveningEnd: info.goldenHourEveningEnd,
+        blueHourMorningStart: info.blueHourMorningStart,
+        blueHourMorningEnd: info.blueHourMorningEnd,
+        blueHourEveningStart: info.blueHourEveningStart,
+        blueHourEveningEnd: info.blueHourEveningEnd,
       };
     });
   }, [worldClock]);
@@ -45,7 +53,6 @@ export default function App() {
       <ScreenHeader
         title="Solar World Clock"
         subtitle={glasses.status}
-        actions={<IcFeatTimeCounting width={28} height={28} />}
       />
 
       <WorldClock
@@ -62,16 +69,22 @@ export default function App() {
         </p>
         <div className="glasses-btns" style={{ marginBottom: 8 }}>
           <Button
+            variant={glasses.rightMode === 'solar' ? 'highlight' : 'default'}
+            onClick={() => glasses.setRightMode('solar')}
+          >
+            Solar
+          </Button>
+          <Button
             variant={glasses.rightMode === 'cities' ? 'highlight' : 'default'}
             onClick={() => glasses.setRightMode('cities')}
           >
             Cities
           </Button>
           <Button
-            variant={glasses.rightMode === 'solar' ? 'highlight' : 'default'}
-            onClick={() => glasses.setRightMode('solar')}
+            variant={glasses.rightMode === 'photo' ? 'highlight' : 'default'}
+            onClick={() => glasses.setRightMode('photo')}
           >
-            Solar
+            Photo
           </Button>
         </div>
         {glasses.rightMode === 'cities' && (
@@ -85,21 +98,12 @@ export default function App() {
             </Button>
           </div>
         )}
-        <div className="glasses-btns" style={{ marginBottom: 8 }}>
+        <div className="glasses-btns">
           <Button variant="highlight" onClick={glasses.showDisplay}>
             <IcFeatMenu width={16} height={16} /> Show Display
           </Button>
-          <Button variant="ghost" onClick={glasses.shutdownGlasses}>
+          <Button variant="ghost" onClick={glasses.shutdownGlassesPrompt}>
             <IcFeatScreenOff width={16} height={16} /> Shutdown
-          </Button>
-        </div>
-        <div className="glasses-btns">
-          <Button
-            variant="danger"
-            onClick={glasses.shutdownGlassesPrompt}
-            style={{ gridColumn: '1 / -1' }}
-          >
-            Graceful Shutdown (confirm on glasses)
           </Button>
         </div>
       </Card>

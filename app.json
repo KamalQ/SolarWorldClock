@@ -10,7 +10,7 @@
   "author": "IcedGrapeFruit",
   "entrypoint": "index.html",
   "supported_languages": ["en"],
-  "permissions": [
-    { "name": "network", "desc": "Used to sync time data across timezones." }
-  ]
+  "permissions": {
+    "network": ["*"]
+  }
 }

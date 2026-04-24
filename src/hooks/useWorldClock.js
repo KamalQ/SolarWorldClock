@@ -102,6 +102,15 @@ function getSunTimes(cityName, timezone) {
     dayLength,
     moonPhase,
     moonIllumination,
+    // Photography — golden hour and blue hour (approximated via civil/nautical twilight)
+    goldenHourMorningStart: fmt(times.sunrise),
+    goldenHourMorningEnd: fmt(times.goldenHourEnd),
+    goldenHourEveningStart: fmt(times.goldenHour),
+    goldenHourEveningEnd: fmt(times.sunsetStart),
+    blueHourMorningStart: fmt(times.nauticalDawn),
+    blueHourMorningEnd: fmt(times.dawn),
+    blueHourEveningStart: fmt(times.dusk),
+    blueHourEveningEnd: fmt(times.nauticalDusk),
   };
 }
 
@@ -191,9 +200,9 @@ export default function useWorldClock() {
       offset: getOffsetFromLocal(cityObj.timezone),
       abbr: getAbbreviation(cityObj.timezone),
     };
-    const { sunrise, sunset, solarNoon, dayLength, moonPhase, moonIllumination } = getSunTimes(cityObj.city, cityObj.timezone);
+    const sunData = getSunTimes(cityObj.city, cityObj.timezone);
     const coords = CITY_COORDS[cityObj.city] || null;
-    return { ...base, sunrise, sunset, solarNoon, dayLength, moonPhase, moonIllumination, coords };
+    return { ...base, ...sunData, coords };
   }, [times]);
 
   return { cities, addCity, removeCity, moveCity, getTimeInfo };
