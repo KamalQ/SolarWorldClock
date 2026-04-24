@@ -10,7 +10,7 @@
   "author": "IcedGrapeFruit",
   "entrypoint": "index.html",
   "supported_languages": ["en"],
-  "permissions": {
-    "network": ["*"]
-  }
+  "permissions": [
+    { "name": "network", "desc": "Fetch time zone and solar data" }
+  ]
 }
