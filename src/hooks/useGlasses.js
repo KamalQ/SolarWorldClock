@@ -437,16 +437,18 @@ export default function useGlasses({ getCityData }) {
 
         // Shared handlers — scroll cycles pages, double-tap exits with confirmation
         function handleScroll(et) {
-          if (et !== OsEventTypeList.SCROLL_BOTTOM_EVENT && et !== OsEventTypeList.SCROLL_TOP_EVENT) return;
+          const isForward = et === OsEventTypeList.SCROLL_BOTTOM_EVENT || et === OsEventTypeList.CLICK_EVENT || et === undefined;
+          const isBack = et === OsEventTypeList.SCROLL_TOP_EVENT;
+          if (!isForward && !isBack) return;
           const now = Date.now();
           if (now - lastScrollRef.current < 400) return;
           lastScrollRef.current = now;
           setRightMode((prev) => {
             const idx = PAGES.indexOf(prev);
-            const next = et === OsEventTypeList.SCROLL_BOTTOM_EVENT
+            const next = isForward
               ? PAGES[(idx + 1) % PAGES.length]
               : PAGES[(idx - 1 + PAGES.length) % PAGES.length];
-            logEvent(`Scroll — switched to ${next} view`);
+            logEvent(`Page — switched to ${next} view`);
             return next;
           });
         }
