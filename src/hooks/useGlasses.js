@@ -273,7 +273,7 @@ export default function useGlasses({ getCityData }) {
           containerID: 1, containerName: 'header',
           content: formatHeader(),
           isEventCapture: 1,
-          borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 4,
+          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 4,
         }),
         new TextContainerProperty({
           xPosition: 6,   yPosition: 44,
@@ -281,7 +281,7 @@ export default function useGlasses({ getCityData }) {
           containerID: 2, containerName: 'featured',
           content: leftContent,
           isEventCapture: 0,
-          borderWidth: 1, borderColor: 8, borderRdaius: 3, paddingLength: 6,
+          borderWidth: 1, borderColor: 8, borderRadius: 3, paddingLength: 6,
         }),
         new TextContainerProperty({
           xPosition: 208, yPosition: 44,
@@ -289,7 +289,7 @@ export default function useGlasses({ getCityData }) {
           containerID: 3, containerName: 'list',
           content: rightContent,
           isEventCapture: 0,
-          borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 6,
+          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 6,
         }),
       ],
     };
