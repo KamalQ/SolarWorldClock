@@ -265,14 +265,14 @@ export default function useGlasses({ getCityData }) {
     const leftContent = formatFeatured(featured, mode);
 
     return {
-      containerTotalNum: 4,
+      containerTotalNum: 3,
       textObject: [
         new TextContainerProperty({
           xPosition: 6,   yPosition: 2,
           width: 564,     height: 40,
           containerID: 1, containerName: 'header',
           content: formatHeader(),
-          isEventCapture: 0,
+          isEventCapture: 1,
           borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 4,
         }),
         new TextContainerProperty({
@@ -290,15 +290,6 @@ export default function useGlasses({ getCityData }) {
           content: rightContent,
           isEventCapture: 0,
           borderWidth: 1, borderColor: 5, borderRdaius: 3, paddingLength: 6,
-        }),
-        // Invisible event-capture strip in right gutter — no visible content scrolls
-        new TextContainerProperty({
-          xPosition: 571, yPosition: 2,
-          width: 4,       height: 284,
-          containerID: 4, containerName: 'evtcap',
-          content: ' ',
-          isEventCapture: 1,
-          borderWidth: 0, borderColor: 0, borderRdaius: 0, paddingLength: 0,
         }),
       ],
     };
