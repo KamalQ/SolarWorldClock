@@ -267,28 +267,27 @@ export default function useGlasses({ getCityData }) {
     return {
       containerTotalNum: 3,
       textObject: [
-        // Invisible event-catcher — thin strip, no border, catches all gestures
         new TextContainerProperty({
-          xPosition: 0,   yPosition: 0,
-          width: 576,     height: 6,
-          containerID: 1, containerName: 'evtcap',
-          content: ' ',
+          xPosition: 6,   yPosition: 2,
+          width: 564,     height: 40,
+          containerID: 1, containerName: 'header',
+          content: formatHeader(),
           isEventCapture: 1,
-          borderWidth: 0, borderColor: 0, borderRadius: 0, paddingLength: 0,
+          borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 4,
         }),
         new TextContainerProperty({
-          xPosition: 6,   yPosition: 8,
-          width: 196,     height: 278,
+          xPosition: 6,   yPosition: 44,
+          width: 196,     height: 242,
           containerID: 2, containerName: 'featured',
           content: leftContent,
           isEventCapture: 0,
           borderWidth: 1, borderColor: 8, borderRadius: 3, paddingLength: 6,
         }),
         new TextContainerProperty({
-          xPosition: 208, yPosition: 8,
-          width: 362,     height: 278,
+          xPosition: 208, yPosition: 44,
+          width: 362,     height: 242,
           containerID: 3, containerName: 'list',
-          content: formatHeader() + '\n' + rightContent,
+          content: rightContent,
           isEventCapture: 0,
           borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 6,
         }),
@@ -348,7 +347,7 @@ export default function useGlasses({ getCityData }) {
         : formatList(rest, showDetails);
 
     const ok2 = await upgradeContent(formatFeatured(featured, rightMode), 2, 'featured');
-    const ok3 = await upgradeContent(formatHeader() + '\n' + rightContent, 3, 'list');
+    const ok3 = await upgradeContent(rightContent, 3, 'list');
 
     if (!ok2 || !ok3) {
       await sendPage(buildConfig(cityData, showDetails, rightMode));
