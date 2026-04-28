@@ -119,9 +119,9 @@ function moonSymbol(phase) {
   if (phase === 'New Moon')        return '\u25CB'; // ○
   if (phase === 'Waxing Crescent') return '\u25D4'; // ◔
   if (phase === 'First Quarter')   return '\u25D1'; // ◑
-  if (phase === 'Waxing Gibbous')  return '\u25D5'; // ◕
+  if (phase === 'Waxing Gibbous')  return '\u25CF'; // ◕
   if (phase === 'Full Moon')       return '\u25CF'; // ●
-  if (phase === 'Waning Gibbous')  return '\u25D5'; // ◕
+  if (phase === 'Waning Gibbous')  return '\u25CF'; // ◕
   if (phase === 'Last Quarter')    return '\u25D0'; // ◐
   if (phase === 'Waning Crescent') return '\u25D4'; // ◔
   return '\u25CB';
@@ -272,7 +272,7 @@ export default function useGlasses({ getCityData }) {
           width: 564,     height: 40,
           containerID: 1, containerName: 'header',
           content: formatHeader(),
-          isEventCapture: 1,
+          isEventCapture: 0,
           borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 4,
         }),
         new TextContainerProperty({
@@ -288,7 +288,7 @@ export default function useGlasses({ getCityData }) {
           width: 362,     height: 242,
           containerID: 3, containerName: 'list',
           content: rightContent,
-          isEventCapture: 0,
+          isEventCapture: 1,
           borderWidth: 1, borderColor: 5, borderRadius: 3, paddingLength: 6,
         }),
       ],
