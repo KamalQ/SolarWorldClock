@@ -233,6 +233,10 @@ export default function useGlasses({ getCityData }) {
   const lastContentRef = useRef('');
   const bridgeReadyRef = useRef(false);
   const lastScrollRef = useRef(0);
+  const getCityDataRef = useRef(getCityData);
+
+  // Keep getCityDataRef current so stale closures inside the init useEffect always get fresh data
+  useEffect(() => { getCityDataRef.current = getCityData; }, [getCityData]);
 
   // Persist rightMode whenever it changes
   useEffect(() => {
@@ -330,8 +334,12 @@ export default function useGlasses({ getCityData }) {
   }, []);
 
   const pushContent = useCallback(async () => {
-    if (!bridgeRef.current || !isStartupCreatedRef.current) return;
+    if (!bridgeRef.current) return;
     const cityData = getCityData();
+    if (!isStartupCreatedRef.current) {
+      await sendPage(buildConfig(cityData, showDetails, rightMode));
+      return;
+    }
 
     const fingerprint = cityData.map(c => c.name + c.time + c.sunrise + (c.solarNoon ?? '') + (c.goldenHourMorningStart ?? '') + (c.coords ? c.coords.lat : '')).join(',')
       + (showDetails ? '|d' : '') + `|${rightMode}`;
@@ -417,7 +425,7 @@ export default function useGlasses({ getCityData }) {
         }
 
         const rc = await bridge.createStartUpPageContainer(
-          new CreateStartUpPageContainer(buildConfig(getCityData()))
+          new CreateStartUpPageContainer(buildConfig(getCityDataRef.current()))
         );
         if (rc === 0) {
           isStartupCreatedRef.current = true;
@@ -430,7 +438,7 @@ export default function useGlasses({ getCityData }) {
           if (source === LAUNCH_SOURCE_GLASSES_MENU) {
             isStartupCreatedRef.current = false;
             lastContentRef.current = '';
-            sendPage(buildConfig(getCityData()));
+            sendPage(buildConfig(getCityDataRef.current()));
             logEvent('Auto-launch from glasses menu');
           }
         });
