@@ -233,6 +233,7 @@ export default function useGlasses({ getCityData }) {
   const lastContentRef = useRef('');
   const bridgeReadyRef = useRef(false);
   const lastScrollRef = useRef(0);
+  const isPushingRef = useRef(false);
   const getCityDataRef = useRef(getCityData);
   const pushContentRef = useRef(null);
 
@@ -326,7 +327,7 @@ export default function useGlasses({ getCityData }) {
         containerID: containerId,
         containerName: containerName,
         contentOffset: 0,
-        contentLength: text.length,
+        contentLength: 2000,
         content: text,
       }));
     } catch {
@@ -336,30 +337,39 @@ export default function useGlasses({ getCityData }) {
 
   const pushContent = useCallback(async () => {
     if (!bridgeRef.current) return;
-    const cityData = getCityData();
-    if (!isStartupCreatedRef.current) {
-      await sendPage(buildConfig(cityData, showDetails, rightMode));
-      return;
-    }
+    if (isPushingRef.current) return;
+    isPushingRef.current = true;
+    try {
+      const cityData = getCityData();
+      if (!isStartupCreatedRef.current) {
+        await sendPage(buildConfig(cityData, showDetails, rightMode));
+        return;
+      }
 
-    const fingerprint = cityData.map(c => c.name + c.time + c.sunrise + (c.solarNoon ?? '') + (c.goldenHourMorningStart ?? '') + (c.coords ? c.coords.lat : '')).join(',')
-      + (showDetails ? '|d' : '') + `|${rightMode}`;
-    if (fingerprint === lastContentRef.current) return;
-    lastContentRef.current = fingerprint;
+      // Strip seconds so fingerprint only changes on minute boundaries
+      const fingerprint = cityData.map(c => {
+        const timeMin = c.time.replace(/:\d{2}(\s[AP]M)/, '$1');
+        return c.name + timeMin + c.sunrise + (c.solarNoon ?? '') + (c.goldenHourMorningStart ?? '') + (c.coords ? c.coords.lat : '');
+      }).join(',') + (showDetails ? '|d' : '') + `|${rightMode}`;
+      if (fingerprint === lastContentRef.current) return;
+      lastContentRef.current = fingerprint;
 
-    const featured = cityData[0] || null;
-    const rest = cityData.slice(1);
-    const rightContent = rightMode === 'solar'
-      ? formatSolar(featured)
-      : rightMode === 'photo'
-        ? formatPhoto(featured)
-        : formatList(rest, showDetails);
+      const featured = cityData[0] || null;
+      const rest = cityData.slice(1);
+      const rightContent = rightMode === 'solar'
+        ? formatSolar(featured)
+        : rightMode === 'photo'
+          ? formatPhoto(featured)
+          : formatList(rest, showDetails);
 
-    const ok2 = await upgradeContent(formatFeatured(featured, rightMode), 2, 'featured');
-    const ok3 = await upgradeContent(rightContent, 3, 'list');
+      const ok2 = await upgradeContent(formatFeatured(featured, rightMode), 2, 'featured');
+      const ok3 = await upgradeContent(rightContent, 3, 'list');
 
-    if (!ok2 || !ok3) {
-      await sendPage(buildConfig(cityData, showDetails, rightMode));
+      if (!ok2 || !ok3) {
+        await sendPage(buildConfig(cityData, showDetails, rightMode));
+      }
+    } finally {
+      isPushingRef.current = false;
     }
   }, [getCityData, upgradeContent, buildConfig, sendPage, showDetails, rightMode]);
 
