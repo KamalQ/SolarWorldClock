@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Card, Button, SearchBar } from 'even-toolkit/web';
+import { Card, Button } from 'even-toolkit/web';
 import { IcPlus, IcCross, IcTrash } from 'even-toolkit/web/icons/svg-icons';
+// SearchBar replaced with plain input to avoid oversized built-in icon
 import TIMEZONES from '../data/timezones';
 
 const shortTime = (t) => t.replace(/:\d{2}\s/, ' ');
@@ -179,7 +180,24 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
               <h2 style={{ fontSize: 17, fontWeight: 400, margin: 0 }}>Add City</h2>
               <button className="icon-btn" onClick={() => setShowPicker(false)}><IcCross width={20} height={20} /></button>
             </div>
-            <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search cities..." autoFocus />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search cities..."
+              autoFocus
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '10px 12px',
+                fontSize: 15,
+                fontWeight: 300,
+                border: 'none',
+                borderRadius: 6,
+                background: '#F6F6F6',
+                color: '#232323',
+                outline: 'none',
+              }}
+            />
             <div className="city-list">
               {filtered.map((tz) => (
                 <button key={tz.city} className="city-option" onClick={() => { addCity(tz); setShowPicker(false); }}>

@@ -234,6 +234,7 @@ export default function useGlasses({ getCityData }) {
   const bridgeReadyRef = useRef(false);
   const lastScrollRef = useRef(0);
   const getCityDataRef = useRef(getCityData);
+  const pushContentRef = useRef(null);
 
   // Keep getCityDataRef current so stale closures inside the init useEffect always get fresh data
   useEffect(() => { getCityDataRef.current = getCityData; }, [getCityData]);
@@ -362,6 +363,9 @@ export default function useGlasses({ getCityData }) {
     }
   }, [getCityData, upgradeContent, buildConfig, sendPage, showDetails, rightMode]);
 
+  // Keep pushContentRef current for lifecycle event handler (registered in [] useEffect)
+  useEffect(() => { pushContentRef.current = pushContent; }, [pushContent]);
+
   const shutdownGlasses = useCallback(async () => {
     try {
       const bridge = bridgeRef.current;
@@ -481,6 +485,15 @@ export default function useGlasses({ getCityData }) {
           }
           if (event.sysEvent) {
             const et = event.sysEvent.eventType;
+            if (et === OsEventTypeList.FOREGROUND_ENTER_EVENT) {
+              pushContentRef.current?.();
+              return;
+            }
+            if (et === OsEventTypeList.ABNORMAL_EXIT_EVENT) {
+              isStartupCreatedRef.current = false;
+              return;
+            }
+            if (et === OsEventTypeList.FOREGROUND_EXIT_EVENT) return;
             const src = event.sysEvent.eventSource;
             const srcLabel = src === EventSourceType.TOUCH_EVENT_FROM_RING ? 'ring'
               : src === EventSourceType.TOUCH_EVENT_FROM_GLASSES_R ? 'glasses-R'
