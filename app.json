@@ -2,7 +2,7 @@
   "package_id": "com.icedgrapefruit.worldclock",
   "edition": "202601",
   "name": "Solar World Clock",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "min_app_version": "0.2.0",
   "min_sdk_version": "0.1.0",
   "tagline": "Time zones at a glance",

@@ -122,6 +122,21 @@ export default function useWorldClock() {
 
   // Load from SDK localStorage on mount
   useEffect(() => {
+    // Fast path: populate synchronously from browser localStorage (no BLE roundtrip).
+    // By the time waitForEvenAppBridge resolves, React will have already re-rendered
+    // with real cities so createStartUpPageContainer sees them on the first call.
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCities(parsed);
+          setIsLoading(false);
+        }
+      }
+    } catch (_) {}
+
+    // Authoritative path: reconcile with bridge storage
     async function load() {
       try {
         const bridge = await waitForEvenAppBridge();
@@ -131,12 +146,8 @@ export default function useWorldClock() {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed)) setCities(parsed);
         }
-      } catch (e) {
-        // No bridge (preview mode) — try browser localStorage fallback
-        try {
-          const stored = localStorage.getItem(STORAGE_KEY);
-          if (stored) setCities(JSON.parse(stored));
-        } catch (_) {}
+      } catch (_) {
+        // Bridge unavailable — browser localStorage already applied above
       } finally {
         setIsLoading(false);
       }

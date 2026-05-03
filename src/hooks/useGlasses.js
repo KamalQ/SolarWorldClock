@@ -444,25 +444,17 @@ export default function useGlasses({ getCityData, isLoading = false }) {
         setStatus('Bridge connected');
         setConnected(true);
 
-        // Restore saved right panel mode
+        // Restore saved right panel mode from browser localStorage instantly (no BLE wait).
+        // Reconcile with bridge storage in the background after the display is up.
         let initialMode = 'solar';
         try {
-          const saved = await bridge.getLocalStorage(RIGHTMODE_KEY);
-          if (saved === 'cities' || saved === 'solar' || saved === 'photo') {
-            initialMode = saved;
-            setRightMode(saved);
-            rightModeRef.current = saved; // sync ref immediately — setRightMode is async
+          const cached = localStorage.getItem(RIGHTMODE_KEY);
+          if (cached === 'cities' || cached === 'solar' || cached === 'photo') {
+            initialMode = cached;
+            rightModeRef.current = cached;
+            setRightMode(cached);
           }
-        } catch (_) {
-          try {
-            const saved = localStorage.getItem(RIGHTMODE_KEY);
-            if (saved === 'cities' || saved === 'solar' || saved === 'photo') {
-              initialMode = saved;
-              setRightMode(saved);
-              rightModeRef.current = saved;
-            }
-          } catch (_) {}
-        }
+        } catch (_) {}
 
         const rc = await bridge.createStartUpPageContainer(
           new CreateStartUpPageContainer(buildConfig(getCityDataRef.current(), false, initialMode, isLoadingRef.current))
@@ -471,6 +463,15 @@ export default function useGlasses({ getCityData, isLoading = false }) {
           isStartupCreatedRef.current = true;
           logEvent('Initial display created');
         }
+
+        // Reconcile rightmode with bridge storage (non-blocking — corrects first-install case)
+        bridge.getLocalStorage(RIGHTMODE_KEY).then((saved) => {
+          if (disposed) return;
+          if ((saved === 'cities' || saved === 'solar' || saved === 'photo') && saved !== rightModeRef.current) {
+            setRightMode(saved);
+            rightModeRef.current = saved;
+          }
+        }).catch(() => {});
 
         // Auto-initialize display when launched from glasses menu (SDK 0.0.10)
         bridge.onLaunchSource((source) => {
