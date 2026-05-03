@@ -383,7 +383,7 @@ export default function useGlasses({ getCityData, isLoading = false }) {
       const ok3 = await upgradeContent(rightContent, 3, 'list');
 
       if (!ok2 || !ok3) {
-        await sendPage(buildConfig(cityData, showDetails, rightMode));
+        await sendPage(buildConfig(cityData, showDetails, rightMode, loading));
       }
     } finally {
       isPushingRef.current = false;
@@ -445,20 +445,27 @@ export default function useGlasses({ getCityData, isLoading = false }) {
         setConnected(true);
 
         // Restore saved right panel mode
+        let initialMode = 'solar';
         try {
           const saved = await bridge.getLocalStorage(RIGHTMODE_KEY);
           if (saved === 'cities' || saved === 'solar' || saved === 'photo') {
+            initialMode = saved;
             setRightMode(saved);
+            rightModeRef.current = saved; // sync ref immediately — setRightMode is async
           }
         } catch (_) {
           try {
             const saved = localStorage.getItem(RIGHTMODE_KEY);
-            if (saved === 'cities' || saved === 'solar' || saved === 'photo') setRightMode(saved);
+            if (saved === 'cities' || saved === 'solar' || saved === 'photo') {
+              initialMode = saved;
+              setRightMode(saved);
+              rightModeRef.current = saved;
+            }
           } catch (_) {}
         }
 
         const rc = await bridge.createStartUpPageContainer(
-          new CreateStartUpPageContainer(buildConfig(getCityDataRef.current(), false, 'solar', isLoadingRef.current))
+          new CreateStartUpPageContainer(buildConfig(getCityDataRef.current(), false, initialMode, isLoadingRef.current))
         );
         if (rc === 0) {
           isStartupCreatedRef.current = true;
@@ -469,9 +476,12 @@ export default function useGlasses({ getCityData, isLoading = false }) {
         bridge.onLaunchSource((source) => {
           if (disposed) return;
           if (source === LAUNCH_SOURCE_GLASSES_MENU) {
+            // Reset display state so next pushContent does a full createStartUpPageContainer.
+            // Also clear the concurrency lock — any in-flight push from before launch is stale.
             isStartupCreatedRef.current = false;
             lastContentRef.current = '';
-            sendPage(buildConfig(getCityDataRef.current(), false, rightModeRef.current, isLoadingRef.current));
+            isPushingRef.current = false;
+            pushContentRef.current?.();
             logEvent('Auto-launch from glasses menu');
           }
         });
