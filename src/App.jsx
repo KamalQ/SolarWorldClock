@@ -37,7 +37,7 @@ export default function App() {
     });
   }, [worldClock]);
 
-  const glasses = useGlasses({ getCityData });
+  const glasses = useGlasses({ getCityData, isLoading: worldClock.isLoading });
 
   // Update glasses every second
   useEffect(() => {

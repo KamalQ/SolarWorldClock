@@ -17,6 +17,16 @@ function formatHeader() {
   return '                                      SOLAR WORLD CLOCK';
 }
 
+// ─── Loading helpers ─────────────────────────────────────────────────────────
+function formatLoadingFeatured() {
+  const cp = (t) => centerInPanel(t, 184, 9, 5);
+  return [' ', ' ', ' ', cp('Loading...'), ' ', ' ', ' '].join('\n');
+}
+
+function formatLoadingRight() {
+  return '\n\n  Loading saved cities...';
+}
+
 // ─── Left panel: featured city with full detail (196px wide) ─────────────────
 function centerInPanel(text, usableWidth = 184, charPx = 10, spacePx = 5) {
   const textPx = text.length * charPx;
@@ -42,7 +52,8 @@ function getDateInZone(timezone) {
   return `${get('weekday')} ${get('month')} ${get('day')}`;
 }
 
-function formatFeatured(city, mode = 'cities') {
+function formatFeatured(city, mode = 'cities', loading = false) {
+  if (!city && loading) return formatLoadingFeatured();
   if (!city) return '\n  Add a city\n  in the app\n \n \n ';
   const shortTime = city.time.replace(/:\d{2}\s/, ' ');
   // Abbr + optional offset on the same line as time
@@ -91,7 +102,8 @@ function formatFeatured(city, mode = 'cities') {
 }
 
 // ─── Right panel: Photography mode (362px wide) ──────────────────────────────
-function formatPhoto(city) {
+function formatPhoto(city, loading = false) {
+  if (!city && loading) return formatLoadingRight();
   if (!city) return '\n  Add a city\n  to see photo times';
   const p = '   ';
 
@@ -114,7 +126,7 @@ function formatPhoto(city) {
   ].filter(l => l !== null).join('\n');
 }
 
-// ─── Right panel: Solar mode (362px wide) ────────────────────────────────────
+// ─── Right panel: Solar mode (362px wide, loading flag forwarded) ────────────
 function moonSymbol(phase) {
   if (phase === 'New Moon')        return '\u25CB'; // ○
   if (phase === 'Waxing Crescent') return '\u25D4'; // ◔
@@ -127,7 +139,8 @@ function moonSymbol(phase) {
   return '\u25CB';
 }
 
-function formatSolar(city) {
+function formatSolar(city, loading = false) {
+  if (!city && loading) return formatLoadingRight();
   if (!city) return '\n  Add a city\n  to see solar data';
   if (!city.sunrise && !city.solarNoon) {
     return `\n  ${city.name}\n\n  No solar data\n  for this city`;
@@ -192,7 +205,8 @@ function formatListDetailed(cities) {
   }).join('\n');
 }
 
-function formatList(cities, showDetails = false) {
+function formatList(cities, showDetails = false, loading = false) {
+  if (cities.length === 0 && loading) return formatLoadingRight();
   if (cities.length === 0) return '  No other cities\n  Add via phone';
 
   if (showDetails) {
@@ -221,7 +235,7 @@ function formatList(cities, showDetails = false) {
 const PAGES = ['solar', 'cities', 'photo'];
 const RIGHTMODE_KEY = 'worldclock_rightmode';
 
-export default function useGlasses({ getCityData }) {
+export default function useGlasses({ getCityData, isLoading = false }) {
   const [status, setStatus] = useState('Waiting for bridge...');
   const [connected, setConnected] = useState(false);
   const [eventLog, setEventLog] = useState([]);
@@ -234,6 +248,8 @@ export default function useGlasses({ getCityData }) {
   const bridgeReadyRef = useRef(false);
   const lastScrollRef = useRef(0);
   const isPushingRef = useRef(false);
+  const isLoadingRef = useRef(true);
+  const rightModeRef = useRef('solar');
   const getCityDataRef = useRef(getCityData);
   const pushContentRef = useRef(null);
 
@@ -260,15 +276,15 @@ export default function useGlasses({ getCityData }) {
     });
   }, []);
 
-  const buildConfig = useCallback((cityData, details = false, mode = 'solar') => {
+  const buildConfig = useCallback((cityData, details = false, mode = 'solar', loading = false) => {
     const featured = cityData[0] || null;
     const rest = cityData.slice(1);
     const rightContent = mode === 'solar'
-      ? formatSolar(featured)
+      ? formatSolar(featured, loading)
       : mode === 'photo'
-        ? formatPhoto(featured)
-        : formatList(rest, details);
-    const leftContent = formatFeatured(featured, mode);
+        ? formatPhoto(featured, loading)
+        : formatList(rest, details, loading);
+    const leftContent = formatFeatured(featured, mode, loading);
 
     return {
       containerTotalNum: 3,
@@ -341,28 +357,29 @@ export default function useGlasses({ getCityData }) {
     isPushingRef.current = true;
     try {
       const cityData = getCityData();
+      const loading = isLoadingRef.current;
       if (!isStartupCreatedRef.current) {
-        await sendPage(buildConfig(cityData, showDetails, rightMode));
+        await sendPage(buildConfig(cityData, showDetails, rightMode, loading));
         return;
       }
 
-      // Strip seconds so fingerprint only changes on minute boundaries
+      // Strip seconds so fingerprint only changes on minute boundaries; include loading flag
       const fingerprint = cityData.map(c => {
         const timeMin = c.time.replace(/:\d{2}(\s[AP]M)/, '$1');
         return c.name + timeMin + c.sunrise + (c.solarNoon ?? '') + (c.goldenHourMorningStart ?? '') + (c.coords ? c.coords.lat : '');
-      }).join(',') + (showDetails ? '|d' : '') + `|${rightMode}`;
+      }).join(',') + (showDetails ? '|d' : '') + `|${rightMode}` + (loading ? '|L' : '');
       if (fingerprint === lastContentRef.current) return;
       lastContentRef.current = fingerprint;
 
       const featured = cityData[0] || null;
       const rest = cityData.slice(1);
       const rightContent = rightMode === 'solar'
-        ? formatSolar(featured)
+        ? formatSolar(featured, loading)
         : rightMode === 'photo'
-          ? formatPhoto(featured)
-          : formatList(rest, showDetails);
+          ? formatPhoto(featured, loading)
+          : formatList(rest, showDetails, loading);
 
-      const ok2 = await upgradeContent(formatFeatured(featured, rightMode), 2, 'featured');
+      const ok2 = await upgradeContent(formatFeatured(featured, rightMode, loading), 2, 'featured');
       const ok3 = await upgradeContent(rightContent, 3, 'list');
 
       if (!ok2 || !ok3) {
@@ -375,6 +392,8 @@ export default function useGlasses({ getCityData }) {
 
   // Keep pushContentRef current for lifecycle event handler (registered in [] useEffect)
   useEffect(() => { pushContentRef.current = pushContent; }, [pushContent]);
+  useEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
+  useEffect(() => { rightModeRef.current = rightMode; }, [rightMode]);
 
   const shutdownGlasses = useCallback(async () => {
     try {
@@ -407,7 +426,7 @@ export default function useGlasses({ getCityData }) {
     if (!bridgeRef.current) return;
     isStartupCreatedRef.current = false;
     lastContentRef.current = '';
-    await sendPage(buildConfig(getCityData(), showDetails, rightMode));
+    await sendPage(buildConfig(getCityData(), showDetails, rightMode, isLoadingRef.current));
     setStatus('Display active');
     logEvent('Display shown');
   }, [getCityData, buildConfig, sendPage, logEvent, showDetails, rightMode]);
@@ -439,7 +458,7 @@ export default function useGlasses({ getCityData }) {
         }
 
         const rc = await bridge.createStartUpPageContainer(
-          new CreateStartUpPageContainer(buildConfig(getCityDataRef.current()))
+          new CreateStartUpPageContainer(buildConfig(getCityDataRef.current(), false, 'solar', isLoadingRef.current))
         );
         if (rc === 0) {
           isStartupCreatedRef.current = true;
@@ -452,7 +471,7 @@ export default function useGlasses({ getCityData }) {
           if (source === LAUNCH_SOURCE_GLASSES_MENU) {
             isStartupCreatedRef.current = false;
             lastContentRef.current = '';
-            sendPage(buildConfig(getCityDataRef.current()));
+            sendPage(buildConfig(getCityDataRef.current(), false, rightModeRef.current, isLoadingRef.current));
             logEvent('Auto-launch from glasses menu');
           }
         });

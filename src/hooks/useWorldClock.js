@@ -116,6 +116,7 @@ function getSunTimes(cityName, timezone) {
 
 export default function useWorldClock() {
   const [cities, setCities] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [times, setTimes] = useState({});
   const bridgeReadyRef = useRef(false);
 
@@ -136,6 +137,8 @@ export default function useWorldClock() {
           const stored = localStorage.getItem(STORAGE_KEY);
           if (stored) setCities(JSON.parse(stored));
         } catch (_) {}
+      } finally {
+        setIsLoading(false);
       }
     }
     load();
@@ -205,5 +208,5 @@ export default function useWorldClock() {
     return { ...base, ...sunData, coords };
   }, [times]);
 
-  return { cities, addCity, removeCity, moveCity, getTimeInfo };
+  return { cities, isLoading, addCity, removeCity, moveCity, getTimeInfo };
 }
