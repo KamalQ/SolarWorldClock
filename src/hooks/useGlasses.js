@@ -56,10 +56,6 @@ function formatFeatured(city, mode = 'cities', loading = false) {
   if (!city && loading) return formatLoadingFeatured();
   if (!city) return '\n  Add a city\n  in the app\n \n \n ';
   const shortTime = city.time.replace(/:\d{2}\s/, ' ');
-  // Abbr + optional offset on the same line as time
-  const timeLine = city.offset !== 'Same time'
-    ? `${shortTime}  ${city.abbr}  ${city.offset}`
-    : `${shortTime}  ${city.abbr}`;
   const dateStr = city.timezone ? getDateInZone(city.timezone) : '';
 
   let bottomLines;

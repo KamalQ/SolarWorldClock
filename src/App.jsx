@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import useWorldClock from './hooks/useWorldClock';
 import useGlasses from './hooks/useGlasses';
 import WorldClock from './components/WorldClock';
@@ -39,14 +39,16 @@ export default function App() {
 
   const glasses = useGlasses({ getCityData, isLoading: worldClock.isLoading });
 
-  // Update glasses every second
+  // Keep a stable ref so the interval closure always calls the latest pushContent
+  // without the interval itself needing to be recreated every second.
+  const pushContentRef = useRef(glasses.pushContent);
+  useEffect(() => { pushContentRef.current = glasses.pushContent; }, [glasses.pushContent]);
+
   useEffect(() => {
-    const id = setInterval(() => {
-      glasses.pushContent();
-    }, 1000);
-    glasses.pushContent();
+    const id = setInterval(() => { pushContentRef.current?.(); }, 1000);
+    pushContentRef.current?.();
     return () => clearInterval(id);
-  }, [glasses.pushContent]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div id="app-container">

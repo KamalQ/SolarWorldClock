@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, Button } from 'even-toolkit/web';
 import { IcPlus, IcCross, IcTrash } from 'even-toolkit/web/icons/svg-icons';
 // SearchBar replaced with plain input to avoid oversized built-in icon
@@ -42,14 +42,18 @@ function FeaturedCard({ city, info, onDelete }) {
       </div>
 
       {/* Solar + Moon data */}
-      {info.sunrise && (
+      {(info.sunrise || info.moonPhase) && (
         <>
           <Divider />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <DataRow label="↑ Sunrise"  value={info.sunrise} />
-            <DataRow label="↓ Sunset"   value={info.sunset} />
-            <DataRow label="Solar Noon" value={info.solarNoon} />
-            <DataRow label="Day Length" value={info.dayLength} />
+            {info.sunrise && (
+              <>
+                <DataRow label="↑ Sunrise"  value={info.sunrise} />
+                <DataRow label="↓ Sunset"   value={info.sunset} />
+                <DataRow label="Solar Noon" value={info.solarNoon} />
+                <DataRow label="Day Length" value={info.dayLength} />
+              </>
+            )}
             {info.moonPhase && (
               <>
                 <DataRow label="Moon" value={info.moonPhase} />
@@ -125,14 +129,13 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
 
-  const filtered = TIMEZONES.filter((tz) => {
-    if (cities.some((c) => c.city === tz.city)) return false;
+  const addedSet = useMemo(() => new Set(cities.map((c) => c.city)), [cities]);
+  const searchLower = search.toLowerCase();
+  const filtered = useMemo(() => TIMEZONES.filter((tz) => {
+    if (addedSet.has(tz.city)) return false;
     if (!search) return true;
-    return (
-      tz.city.toLowerCase().includes(search.toLowerCase()) ||
-      tz.country.toLowerCase().includes(search.toLowerCase())
-    );
-  });
+    return tz.city.toLowerCase().includes(searchLower) || tz.country.toLowerCase().includes(searchLower);
+  }), [addedSet, search, searchLower]);
 
   return (
     <div className="tab-content">

@@ -5,6 +5,21 @@ import CITY_COORDS from '../data/cityCoords';
 
 const STORAGE_KEY = 'worldclock_cities';
 
+// Cache getSunTimes results per city per calendar date — solar/moon data changes daily, not per second.
+const sunTimesCache = {};
+function getCachedSunTimes(cityName, timezone) {
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const key = cityName + '|' + today;
+  if (!sunTimesCache[key]) {
+    // Clear stale entries from previous days
+    for (const k of Object.keys(sunTimesCache)) {
+      if (!k.endsWith(today)) delete sunTimesCache[k];
+    }
+    sunTimesCache[key] = getSunTimes(cityName, timezone);
+  }
+  return sunTimesCache[key];
+}
+
 function getTimeInZone(timezone) {
   return new Intl.DateTimeFormat('en-US', {
     timeZone: timezone,
@@ -205,7 +220,7 @@ export default function useWorldClock() {
       offset: getOffsetFromLocal(cityObj.timezone),
       abbr: getAbbreviation(cityObj.timezone),
     };
-    const sunData = getSunTimes(cityObj.city, cityObj.timezone);
+    const sunData = getCachedSunTimes(cityObj.city, cityObj.timezone);
     const coords = CITY_COORDS[cityObj.city] || null;
     return { ...base, ...sunData, coords };
   }, [times]);
