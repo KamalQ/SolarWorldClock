@@ -214,6 +214,7 @@ function formatList(cities, showDetails = false, loading = false) {
   }
 
   // Use buildScrollableList for automatic scroll indicators
+  const maxNameLen = Math.max(...cities.map(x => x.name.length));
   const displayLines = buildScrollableList({
     items: cities,
     highlightedIndex: -1,  // no cursor highlight
@@ -223,7 +224,6 @@ function formatList(cities, showDetails = false, loading = false) {
       const offset = c.offset === 'Same time' ? '' : c.offset;
       // Compact single-line format: " CityName  9:45 AM  EST  +2h"
       const tail = offset ? `${shortTime}  ${c.abbr}  ${offset}` : `${shortTime}  ${c.abbr}`;
-      const maxNameLen = Math.max(...cities.map(x => x.name.length));
       const padTo = Math.min(maxNameLen + 2, MAX_LINE_CHARS - tail.length - 1);
       let displayName = c.name.length <= padTo ? c.name.padEnd(padTo) : c.name.slice(0, padTo - 2) + '..';
       return ` ${displayName}${tail}`;
@@ -408,13 +408,14 @@ export default function useGlasses({ getCityData, isLoading = false }) {
     }
   }, [logEvent]);
 
-  // Graceful shutdown: shows user-confirmation popup on glasses (exitMode: 1)
+  // Graceful shutdown: shows user-confirmation popup on glasses (exitMode: 1).
+  // Do NOT reset isStartupCreated here — the user may cancel. ABNORMAL_EXIT_EVENT
+  // handles the reset if they confirm.
   const shutdownGlassesPrompt = useCallback(async () => {
     try {
       const bridge = bridgeRef.current;
       if (!bridge) return;
       await bridge.shutDownPageContainer(1);
-      isStartupCreatedRef.current = false;
       setStatus('Shutdown requested');
       logEvent('Graceful shutdown requested');
     } catch (err) {
@@ -424,7 +425,6 @@ export default function useGlasses({ getCityData, isLoading = false }) {
 
   const showDisplay = useCallback(async () => {
     if (!bridgeRef.current) return;
-    isStartupCreatedRef.current = false;
     lastContentRef.current = '';
     await sendPage(buildConfig(getCityData(), showDetails, rightMode, isLoadingRef.current));
     setStatus('Display active');
@@ -477,9 +477,6 @@ export default function useGlasses({ getCityData, isLoading = false }) {
         bridge.onLaunchSource((source) => {
           if (disposed) return;
           if (source === LAUNCH_SOURCE_GLASSES_MENU) {
-            // Reset display state so next pushContent does a full createStartUpPageContainer.
-            // Also clear the concurrency lock — any in-flight push from before launch is stale.
-            isStartupCreatedRef.current = false;
             lastContentRef.current = '';
             isPushingRef.current = false;
             pushContentRef.current?.();

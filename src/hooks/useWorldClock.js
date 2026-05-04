@@ -17,34 +17,15 @@ function getTimeInZone(timezone) {
 
 function getOffsetFromLocal(timezone) {
   const now = new Date();
-  const localParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(now);
-  const targetParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(now);
-
-  const getVal = (parts, type) => parts.find((p) => p.type === type)?.value;
-  const localH = parseInt(getVal(localParts, 'hour'), 10);
-  const localM = parseInt(getVal(localParts, 'minute'), 10);
-  const targetH = parseInt(getVal(targetParts, 'hour'), 10);
-  const targetM = parseInt(getVal(targetParts, 'minute'), 10);
-  const localDay = parseInt(getVal(localParts, 'day'), 10);
-  const targetDay = parseInt(getVal(targetParts, 'day'), 10);
-
-  let diffH = targetH - localH + (targetDay - localDay) * 24;
-  let diffM = targetM - localM;
-  if (diffH > 12) diffH -= 24;
-  if (diffH < -12) diffH += 24;
-
-  if (diffH === 0 && diffM === 0) return 'Same time';
-  const sign = diffH > 0 || (diffH === 0 && diffM > 0) ? '+' : '';
-  if (diffM === 0) return `${sign}${diffH}h`;
-  return `${sign}${diffH}h ${Math.abs(diffM)}m`;
+  const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Parse the wall-clock time in each zone as a plain Date (year/month crossings handled correctly)
+  const toWall = (tz) => new Date(now.toLocaleString('en-US', { timeZone: tz }));
+  const diffMin = Math.round((toWall(timezone) - toWall(localTz)) / 60000);
+  if (diffMin === 0) return 'Same time';
+  const sign = diffMin > 0 ? '+' : '';
+  const h = Math.trunc(diffMin / 60);
+  const m = Math.abs(diffMin % 60);
+  return m === 0 ? `${sign}${h}h` : `${sign}${h}h ${m}m`;
 }
 
 function getAbbreviation(timezone) {
@@ -119,6 +100,8 @@ export default function useWorldClock() {
   const [isLoading, setIsLoading] = useState(true);
   const [times, setTimes] = useState({});
   const bridgeReadyRef = useRef(false);
+  // Suppresses the save-back that would otherwise fire when we load cities from the bridge
+  const skipNextSaveRef = useRef(false);
 
   // Load from SDK localStorage on mount
   useEffect(() => {
@@ -130,6 +113,7 @@ export default function useWorldClock() {
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          skipNextSaveRef.current = true;
           setCities(parsed);
           setIsLoading(false);
         }
@@ -144,7 +128,10 @@ export default function useWorldClock() {
         const stored = await bridge.getLocalStorage(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) setCities(parsed);
+          if (Array.isArray(parsed)) {
+            skipNextSaveRef.current = true;
+            setCities(parsed);
+          }
         }
       } catch (_) {
         // Bridge unavailable — browser localStorage already applied above
@@ -155,9 +142,13 @@ export default function useWorldClock() {
     load();
   }, []);
 
-  // Save to SDK localStorage whenever cities change
+  // Save to SDK localStorage whenever cities change (skip when the change came from a load)
   useEffect(() => {
     if (cities.length === 0 && !bridgeReadyRef.current) return;
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false;
+      return;
+    }
     async function save() {
       const json = JSON.stringify(cities);
       try {
