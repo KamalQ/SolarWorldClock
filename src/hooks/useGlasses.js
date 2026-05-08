@@ -502,7 +502,8 @@ export default function useGlasses({ getCityData, isLoading = false }) {
           logEvent(`Double-tap from ${srcLabel} — requesting exit`);
           try {
             await bridge.shutDownPageContainer(1); // 1 = graceful with confirmation popup
-            isStartupCreatedRef.current = false;
+            // Do NOT reset isStartupCreatedRef here — user may cancel the popup.
+            // ABNORMAL_EXIT_EVENT handles the reset on confirmed exit.
             setStatus('Shutdown requested');
           } catch (err) {
             console.error('shutdown error:', err);
@@ -556,10 +557,15 @@ export default function useGlasses({ getCityData, isLoading = false }) {
     return () => { disposed = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const triggerPush = useCallback(() => {
+    lastContentRef.current = '';
+    pushContentRef.current?.();
+  }, []);
+
   return {
     status, connected, eventLog,
     shutdownGlasses, shutdownGlassesPrompt,
-    showDisplay, pushContent,
+    showDisplay, pushContent, triggerPush,
     showDetails, setShowDetails,
     rightMode, setRightMode,
   };

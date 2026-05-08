@@ -50,6 +50,17 @@ export default function App() {
     return () => clearInterval(id);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Immediately push to HUD when cities are added or removed (don't wait for the interval).
+  const isCitiesFirstMountRef = useRef(true);
+  useEffect(() => {
+    if (isCitiesFirstMountRef.current) {
+      isCitiesFirstMountRef.current = false;
+      return;
+    }
+    if (worldClock.isLoading) return;
+    glasses.triggerPush();
+  }, [worldClock.cities, worldClock.isLoading, glasses.triggerPush]);
+
   return (
     <div id="app-container">
       <ScreenHeader
