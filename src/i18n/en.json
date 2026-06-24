@@ -1,0 +1,50 @@
+{
+  "app.title": "Solar World Clock",
+
+  "cities.featured": "Featured on glasses",
+  "cities.add": "Add City",
+  "cities.search": "Search cities...",
+  "cities.none": "No cities added yet",
+  "cities.noneTip": "Tap the button below to add a city",
+  "cities.noResults": "No cities found",
+  "cities.top": "★ Top",
+
+  "glasses.panel": "Glasses — Right Panel",
+  "glasses.solar": "Solar",
+  "glasses.cities": "Cities",
+  "glasses.photo": "Photo",
+  "glasses.showDetails": "Show City Details",
+  "glasses.hideDetails": "Hide City Details",
+  "glasses.showDisplay": "Show Display",
+  "glasses.shutdown": "Shutdown",
+
+  "data.sunrise": "↑ Sunrise",
+  "data.sunset": "↓ Sunset",
+  "data.solarNoon": "Solar Noon",
+  "data.dayLength": "Day Length",
+  "data.moon": "Moon",
+  "data.illuminated": "Illuminated",
+
+  "moon.newMoon": "New Moon",
+  "moon.waxingCrescent": "Waxing Crescent",
+  "moon.firstQuarter": "First Quarter",
+  "moon.waxingGibbous": "Waxing Gibbous",
+  "moon.fullMoon": "Full Moon",
+  "moon.waningGibbous": "Waning Gibbous",
+  "moon.lastQuarter": "Last Quarter",
+  "moon.waningCrescent": "Waning Crescent",
+
+  "time.sameTime": "Same time",
+
+  "settings.title": "Settings",
+  "settings.language": "Language",
+
+  "feedback.title": "Feedback",
+  "feedback.bug": "Bug Report",
+  "feedback.feature": "Feature Request",
+  "feedback.general": "General Feedback",
+  "feedback.placeholder": "Describe the bug or share your idea...",
+  "feedback.send": "Send Feedback",
+  "feedback.info": "Auto-attached info",
+  "feedback.sent": "Opening email client..."
+}

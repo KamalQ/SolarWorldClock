@@ -1,0 +1,50 @@
+{
+  "app.title": "ソーラー世界時計",
+
+  "cities.featured": "グラスに表示中",
+  "cities.add": "都市を追加",
+  "cities.search": "都市を検索…",
+  "cities.none": "都市がまだ追加されていません",
+  "cities.noneTip": "下のボタンをタップして都市を追加",
+  "cities.noResults": "該当する都市が見つかりません",
+  "cities.top": "★ トップ",
+
+  "glasses.panel": "グラス — 右パネル",
+  "glasses.solar": "ソーラー",
+  "glasses.cities": "都市",
+  "glasses.photo": "写真",
+  "glasses.showDetails": "都市の詳細を表示",
+  "glasses.hideDetails": "都市の詳細を非表示",
+  "glasses.showDisplay": "ディスプレイを表示",
+  "glasses.shutdown": "シャットダウン",
+
+  "data.sunrise": "↑ 日の出",
+  "data.sunset": "↓ 日の入り",
+  "data.solarNoon": "南中",
+  "data.dayLength": "日照時間",
+  "data.moon": "月",
+  "data.illuminated": "輝面比",
+
+  "moon.newMoon": "新月",
+  "moon.waxingCrescent": "三日月",
+  "moon.firstQuarter": "上弦の月",
+  "moon.waxingGibbous": "十日夜の月",
+  "moon.fullMoon": "満月",
+  "moon.waningGibbous": "居待月",
+  "moon.lastQuarter": "下弦の月",
+  "moon.waningCrescent": "二十六夜月",
+
+  "time.sameTime": "同じ時刻",
+
+  "settings.title": "設定",
+  "settings.language": "言語",
+
+  "feedback.title": "フィードバック",
+  "feedback.bug": "バグ報告",
+  "feedback.feature": "機能リクエスト",
+  "feedback.general": "一般的なフィードバック",
+  "feedback.placeholder": "バグの内容やアイデアを聞かせてください…",
+  "feedback.send": "フィードバックを送信",
+  "feedback.info": "自動添付の情報",
+  "feedback.sent": "メールを開いています…"
+}

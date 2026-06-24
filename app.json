@@ -2,13 +2,13 @@
   "package_id": "com.icedgrapefruit.worldclock",
   "edition": "202601",
   "name": "Solar World Clock",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "min_app_version": "0.2.0",
   "min_sdk_version": "0.1.0",
   "tagline": "Time zones at a glance",
   "description": "Solar World Clock lets you track time across the globe while staying connected to the sun. See local time, sunrise, solar noon, sunset, day length, and moon phase for any city — all at a glance on your G2 glasses. Perfect for international meetings, travel planning, astronomy enthusiasts, and anyone who lives by the light.",
   "author": "IcedGrapeFruit",
   "entrypoint": "index.html",
-  "supported_languages": ["en"],
+  "supported_languages": ["en", "zh", "ja", "ko", "es", "fr", "de", "pt"],
   "permissions": []
 }

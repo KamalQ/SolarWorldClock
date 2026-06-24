@@ -1,0 +1,50 @@
+{
+  "app.title": "Horloge Solaire Mondiale",
+
+  "cities.featured": "Affichée sur les lunettes",
+  "cities.add": "Ajouter une ville",
+  "cities.search": "Rechercher une ville…",
+  "cities.none": "Aucune ville ajoutée",
+  "cities.noneTip": "Appuyez sur le bouton ci-dessous pour ajouter une ville",
+  "cities.noResults": "Aucune ville trouvée",
+  "cities.top": "★ Haut",
+
+  "glasses.panel": "Lunettes — Panneau droit",
+  "glasses.solar": "Solaire",
+  "glasses.cities": "Villes",
+  "glasses.photo": "Photo",
+  "glasses.showDetails": "Afficher les détails",
+  "glasses.hideDetails": "Masquer les détails",
+  "glasses.showDisplay": "Afficher l'écran",
+  "glasses.shutdown": "Éteindre",
+
+  "data.sunrise": "↑ Lever du soleil",
+  "data.sunset": "↓ Coucher du soleil",
+  "data.solarNoon": "Midi solaire",
+  "data.dayLength": "Durée du jour",
+  "data.moon": "Lune",
+  "data.illuminated": "Illuminée",
+
+  "moon.newMoon": "Nouvelle lune",
+  "moon.waxingCrescent": "Premier croissant",
+  "moon.firstQuarter": "Premier quartier",
+  "moon.waxingGibbous": "Gibbeuse croissante",
+  "moon.fullMoon": "Pleine lune",
+  "moon.waningGibbous": "Gibbeuse décroissante",
+  "moon.lastQuarter": "Dernier quartier",
+  "moon.waningCrescent": "Dernier croissant",
+
+  "time.sameTime": "Même heure",
+
+  "settings.title": "Réglages",
+  "settings.language": "Langue",
+
+  "feedback.title": "Commentaires",
+  "feedback.bug": "Signaler un bug",
+  "feedback.feature": "Suggérer une fonctionnalité",
+  "feedback.general": "Commentaire général",
+  "feedback.placeholder": "Décrivez le problème ou partagez votre idée…",
+  "feedback.send": "Envoyer",
+  "feedback.info": "Informations jointes automatiquement",
+  "feedback.sent": "Ouverture du client mail…"
+}

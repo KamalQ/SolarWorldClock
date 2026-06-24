@@ -1,0 +1,50 @@
+{
+  "app.title": "Solare Weltuhr",
+
+  "cities.featured": "Auf der Brille angezeigt",
+  "cities.add": "Stadt hinzufügen",
+  "cities.search": "Städte suchen…",
+  "cities.none": "Noch keine Städte hinzugefügt",
+  "cities.noneTip": "Tippe auf die Schaltfläche unten, um eine Stadt hinzuzufügen",
+  "cities.noResults": "Keine Städte gefunden",
+  "cities.top": "★ Oben",
+
+  "glasses.panel": "Brille — Rechtes Panel",
+  "glasses.solar": "Solar",
+  "glasses.cities": "Städte",
+  "glasses.photo": "Foto",
+  "glasses.showDetails": "Details anzeigen",
+  "glasses.hideDetails": "Details ausblenden",
+  "glasses.showDisplay": "Display einblenden",
+  "glasses.shutdown": "Ausschalten",
+
+  "data.sunrise": "↑ Sonnenaufgang",
+  "data.sunset": "↓ Sonnenuntergang",
+  "data.solarNoon": "Sonnenhöchststand",
+  "data.dayLength": "Tageslänge",
+  "data.moon": "Mond",
+  "data.illuminated": "Beleuchtet",
+
+  "moon.newMoon": "Neumond",
+  "moon.waxingCrescent": "Zunehmende Sichel",
+  "moon.firstQuarter": "Erstes Viertel",
+  "moon.waxingGibbous": "Zunehmender Mond",
+  "moon.fullMoon": "Vollmond",
+  "moon.waningGibbous": "Abnehmender Mond",
+  "moon.lastQuarter": "Letztes Viertel",
+  "moon.waningCrescent": "Abnehmende Sichel",
+
+  "time.sameTime": "Gleiche Uhrzeit",
+
+  "settings.title": "Einstellungen",
+  "settings.language": "Sprache",
+
+  "feedback.title": "Feedback",
+  "feedback.bug": "Fehler melden",
+  "feedback.feature": "Funktion vorschlagen",
+  "feedback.general": "Allgemeines Feedback",
+  "feedback.placeholder": "Beschreibe den Fehler oder teile deine Idee…",
+  "feedback.send": "Feedback senden",
+  "feedback.info": "Automatisch angehängte Infos",
+  "feedback.sent": "E-Mail-Programm wird geöffnet…"
+}

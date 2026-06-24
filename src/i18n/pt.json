@@ -1,0 +1,50 @@
+{
+  "app.title": "Relógio Solar Mundial",
+
+  "cities.featured": "Exibida nos óculos",
+  "cities.add": "Adicionar cidade",
+  "cities.search": "Pesquisar cidades…",
+  "cities.none": "Nenhuma cidade adicionada",
+  "cities.noneTip": "Toque no botão abaixo para adicionar uma cidade",
+  "cities.noResults": "Nenhuma cidade encontrada",
+  "cities.top": "★ Topo",
+
+  "glasses.panel": "Óculos — Painel direito",
+  "glasses.solar": "Solar",
+  "glasses.cities": "Cidades",
+  "glasses.photo": "Foto",
+  "glasses.showDetails": "Mostrar detalhes",
+  "glasses.hideDetails": "Ocultar detalhes",
+  "glasses.showDisplay": "Mostrar tela",
+  "glasses.shutdown": "Desligar",
+
+  "data.sunrise": "↑ Nascer do sol",
+  "data.sunset": "↓ Pôr do sol",
+  "data.solarNoon": "Meio-dia solar",
+  "data.dayLength": "Duração do dia",
+  "data.moon": "Lua",
+  "data.illuminated": "Iluminada",
+
+  "moon.newMoon": "Lua nova",
+  "moon.waxingCrescent": "Lua crescente",
+  "moon.firstQuarter": "Quarto crescente",
+  "moon.waxingGibbous": "Gibosa crescente",
+  "moon.fullMoon": "Lua cheia",
+  "moon.waningGibbous": "Gibosa minguante",
+  "moon.lastQuarter": "Quarto minguante",
+  "moon.waningCrescent": "Lua minguante",
+
+  "time.sameTime": "Mesmo horário",
+
+  "settings.title": "Configurações",
+  "settings.language": "Idioma",
+
+  "feedback.title": "Feedback",
+  "feedback.bug": "Reportar erro",
+  "feedback.feature": "Sugerir recurso",
+  "feedback.general": "Feedback geral",
+  "feedback.placeholder": "Descreva o problema ou compartilhe sua ideia…",
+  "feedback.send": "Enviar feedback",
+  "feedback.info": "Informações anexadas automaticamente",
+  "feedback.sent": "Abrindo o e-mail…"
+}

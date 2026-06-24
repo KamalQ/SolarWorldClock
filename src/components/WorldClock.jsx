@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Card, Button } from 'even-toolkit/web';
 import { IcPlus, IcCross, IcTrash } from 'even-toolkit/web/icons/svg-icons';
-// SearchBar replaced with plain input to avoid oversized built-in icon
+import useLocale from '../i18n/useLocale';
 import TIMEZONES from '../data/timezones';
 
 const shortTime = (t) => t.replace(/:\d{2}\s/, ' ');
@@ -20,9 +20,11 @@ function DataRow({ label, value }) {
 }
 
 function FeaturedCard({ city, info, onDelete }) {
+  const { t, tMoon, tOffset } = useLocale();
+
   return (
     <Card padding="default">
-      <span className="featured-badge">Featured on glasses</span>
+      <span className="featured-badge">{t('cities.featured')}</span>
 
       {/* City + time + delete */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 8 }}>
@@ -30,14 +32,14 @@ function FeaturedCard({ city, info, onDelete }) {
           <div style={{ fontSize: 18, fontWeight: 400 }}>{city.city}</div>
           <div style={{ fontSize: 13, color: 'var(--color-text-dim)', marginTop: 3 }}>
             {info.abbr}
-            {info.offset !== 'Same time' && <span style={{ marginLeft: 8 }}>{info.offset}</span>}
+            {info.offset !== 'Same time' && <span style={{ marginLeft: 8 }}>{tOffset(info.offset)}</span>}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ fontSize: 26, fontWeight: 300, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.5px' }}>
             {shortTime(info.time)}
           </div>
-          <button className="icon-btn" onClick={onDelete} aria-label="Remove city"><IcTrash width={16} height={16} /></button>
+          <button className="icon-btn" onClick={onDelete} aria-label={t('cities.remove') || 'Remove city'}><IcTrash width={16} height={16} /></button>
         </div>
       </div>
 
@@ -48,16 +50,16 @@ function FeaturedCard({ city, info, onDelete }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {info.sunrise && (
               <>
-                <DataRow label="↑ Sunrise"  value={info.sunrise} />
-                <DataRow label="↓ Sunset"   value={info.sunset} />
-                <DataRow label="Solar Noon" value={info.solarNoon} />
-                <DataRow label="Day Length" value={info.dayLength} />
+                <DataRow label={t('data.sunrise')}  value={info.sunrise} />
+                <DataRow label={t('data.sunset')}   value={info.sunset} />
+                <DataRow label={t('data.solarNoon')} value={info.solarNoon} />
+                <DataRow label={t('data.dayLength')} value={info.dayLength} />
               </>
             )}
             {info.moonPhase && (
               <>
-                <DataRow label="Moon" value={info.moonPhase} />
-                <DataRow label="Illuminated" value={info.moonIllumination != null ? `${info.moonIllumination}%` : null} />
+                <DataRow label={t('data.moon')} value={tMoon(info.moonPhase)} />
+                <DataRow label={t('data.illuminated')} value={info.moonIllumination != null ? `${info.moonIllumination}%` : null} />
               </>
             )}
           </div>
@@ -68,8 +70,10 @@ function FeaturedCard({ city, info, onDelete }) {
 }
 
 function CityRow({ city, info, index, isLast, onMove, onDelete, onMoveToTop }) {
+  const { t, tOffset } = useLocale();
   const time = shortTime(info.time);
-  const subtitle = info.offset === 'Same time' ? info.abbr : `${info.abbr}  ·  ${info.offset}`;
+  const localOffset = tOffset(info.offset);
+  const subtitle = info.offset === 'Same time' ? info.abbr : `${info.abbr}  ·  ${localOffset}`;
 
   return (
     <div style={{
@@ -114,11 +118,11 @@ function CityRow({ city, info, index, isLast, onMove, onDelete, onMoveToTop }) {
           letterSpacing: '-0.1px',
         }}
       >
-        ★ Top
+        {t('cities.top')}
       </button>
 
       {/* Delete */}
-      <button className="icon-btn" onClick={onDelete} aria-label="Remove city" style={{ flexShrink: 0 }}>
+      <button className="icon-btn" onClick={onDelete} aria-label={t('cities.remove') || 'Remove city'} style={{ flexShrink: 0 }}>
         <IcTrash width={16} height={16} />
       </button>
     </div>
@@ -126,6 +130,7 @@ function CityRow({ city, info, index, isLast, onMove, onDelete, onMoveToTop }) {
 }
 
 export default function WorldClock({ cities, addCity, removeCity, moveCity, getTimeInfo }) {
+  const { t } = useLocale();
   const [showPicker, setShowPicker] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -141,8 +146,8 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
     <div className="tab-content">
       {cities.length === 0 && (
         <Card padding="default" style={{ textAlign: 'center', padding: '32px 16px' }}>
-          <p style={{ color: 'var(--color-text-dim)', fontSize: 15 }}>No cities added yet</p>
-          <p style={{ color: 'var(--color-text-dim)', fontSize: 13, marginTop: 4 }}>Tap the button below to add a city</p>
+          <p style={{ color: 'var(--color-text-dim)', fontSize: 15 }}>{t('cities.none')}</p>
+          <p style={{ color: 'var(--color-text-dim)', fontSize: 13, marginTop: 4 }}>{t('cities.noneTip')}</p>
         </Card>
       )}
 
@@ -173,20 +178,20 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
       })}
 
       <Button variant="highlight" onClick={() => { setShowPicker(true); setSearch(''); }} style={{ width: '100%' }}>
-        <IcPlus width={16} height={16} /> Add City
+        <IcPlus width={16} height={16} /> {t('cities.add')}
       </Button>
 
       {showPicker && (
         <div className="modal-overlay" onClick={() => setShowPicker(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 style={{ fontSize: 17, fontWeight: 400, margin: 0 }}>Add City</h2>
+              <h2 style={{ fontSize: 17, fontWeight: 400, margin: 0 }}>{t('cities.add')}</h2>
               <button className="icon-btn" onClick={() => setShowPicker(false)}><IcCross width={20} height={20} /></button>
             </div>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search cities..."
+              placeholder={t('cities.search')}
               autoFocus
               style={{
                 width: '100%',
@@ -209,7 +214,7 @@ export default function WorldClock({ cities, addCity, removeCity, moveCity, getT
                 </button>
               ))}
               {filtered.length === 0 && (
-                <p style={{ padding: 16, color: 'var(--color-text-dim)', textAlign: 'center', fontSize: 15 }}>No cities found</p>
+                <p style={{ padding: 16, color: 'var(--color-text-dim)', textAlign: 'center', fontSize: 15 }}>{t('cities.noResults')}</p>
               )}
             </div>
           </div>

@@ -1,0 +1,50 @@
+{
+  "app.title": "太阳世界时钟",
+
+  "cities.featured": "已推送至眼镜",
+  "cities.add": "添加城市",
+  "cities.search": "搜索城市…",
+  "cities.none": "还没有添加城市",
+  "cities.noneTip": "点击下方按钮添加一个城市",
+  "cities.noResults": "未找到相关城市",
+  "cities.top": "★ 置顶",
+
+  "glasses.panel": "眼镜 — 右侧面板",
+  "glasses.solar": "太阳",
+  "glasses.cities": "城市",
+  "glasses.photo": "摄影",
+  "glasses.showDetails": "显示城市详情",
+  "glasses.hideDetails": "隐藏城市详情",
+  "glasses.showDisplay": "显示画面",
+  "glasses.shutdown": "关闭显示",
+
+  "data.sunrise": "↑ 日出",
+  "data.sunset": "↓ 日落",
+  "data.solarNoon": "正午",
+  "data.dayLength": "日照时长",
+  "data.moon": "月相",
+  "data.illuminated": "照亮度",
+
+  "moon.newMoon": "新月",
+  "moon.waxingCrescent": "蛾眉月",
+  "moon.firstQuarter": "上弦月",
+  "moon.waxingGibbous": "盈凸月",
+  "moon.fullMoon": "满月",
+  "moon.waningGibbous": "亏凸月",
+  "moon.lastQuarter": "下弦月",
+  "moon.waningCrescent": "残月",
+
+  "time.sameTime": "时间相同",
+
+  "settings.title": "设置",
+  "settings.language": "语言",
+
+  "feedback.title": "反馈",
+  "feedback.bug": "问题报告",
+  "feedback.feature": "功能建议",
+  "feedback.general": "一般反馈",
+  "feedback.placeholder": "描述你遇到的问题，或分享你的想法…",
+  "feedback.send": "发送反馈",
+  "feedback.info": "自动附加的信息",
+  "feedback.sent": "正在打开邮件…"
+}

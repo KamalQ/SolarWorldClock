@@ -1,0 +1,50 @@
+{
+  "app.title": "태양 세계 시계",
+
+  "cities.featured": "안경에 표시 중",
+  "cities.add": "도시 추가",
+  "cities.search": "도시 검색…",
+  "cities.none": "추가된 도시가 없습니다",
+  "cities.noneTip": "아래 버튼을 눌러 도시를 추가하세요",
+  "cities.noResults": "검색 결과가 없습니다",
+  "cities.top": "★ 맨위",
+
+  "glasses.panel": "안경 — 오른쪽 패널",
+  "glasses.solar": "태양",
+  "glasses.cities": "도시",
+  "glasses.photo": "사진",
+  "glasses.showDetails": "도시 상세 보기",
+  "glasses.hideDetails": "도시 상세 숨기기",
+  "glasses.showDisplay": "디스플레이 표시",
+  "glasses.shutdown": "디스플레이 끄기",
+
+  "data.sunrise": "↑ 일출",
+  "data.sunset": "↓ 일몰",
+  "data.solarNoon": "남중",
+  "data.dayLength": "낮 길이",
+  "data.moon": "달",
+  "data.illuminated": "조도",
+
+  "moon.newMoon": "삭",
+  "moon.waxingCrescent": "초승달",
+  "moon.firstQuarter": "상현달",
+  "moon.waxingGibbous": "상현망간달",
+  "moon.fullMoon": "보름달",
+  "moon.waningGibbous": "하현망간달",
+  "moon.lastQuarter": "하현달",
+  "moon.waningCrescent": "그믐달",
+
+  "time.sameTime": "같은 시간",
+
+  "settings.title": "설정",
+  "settings.language": "언어",
+
+  "feedback.title": "피드백",
+  "feedback.bug": "버그 신고",
+  "feedback.feature": "기능 요청",
+  "feedback.general": "일반 피드백",
+  "feedback.placeholder": "버그를 설명하거나 아이디어를 알려주세요…",
+  "feedback.send": "피드백 보내기",
+  "feedback.info": "자동 첨부 정보",
+  "feedback.sent": "이메일 앱을 여는 중…"
+}
